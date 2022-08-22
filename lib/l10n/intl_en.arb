@@ -1,0 +1,17 @@
+{
+  "email": "Email",
+  "password": "Password",
+  "enter": "ENTER",
+  "fieldRequired": "Field required",
+  "emailRequired": "Email Required",
+  "passwordRequired": "Password Required",
+  "emailNotValid": "Email not valid",
+  "project_1": "Lam Tin - TKO",
+  "project_2": "Peace River Hydro",
+  "project_3": "Anglo America, South Africa",
+  "project_4": "Manila Water TW",
+  "areYouSureYou": "Are you sure, You want logout the application?",
+  "logout": "Logout",
+  "ok": "Ok",
+  "cancel": "Cancel"
+}
