@@ -55,10 +55,10 @@ class _PageState extends StateMVC<StockManagementPage> {
              if(type==0){
                _con!.resetMaterial();
              }else{
-               Navigator.pushNamed(context, '/add_stock').then((value){
+               Navigator.pushNamed(context, '/add_stock',arguments: _con!).then((value){
                  if(value!=null){
-                   type=0;
-                   _con!.getMaterial(0);
+                   type=1;
+                   _con!.getMaterial(1);
                  }
                });
              }
@@ -260,8 +260,13 @@ Widget _loadingLine(){
       return SfCartesianChart(
           primaryXAxis: CategoryAxis(
             labelRotation: -45,
-            labelAlignment:LabelAlignment.center,
-            labelPlacement: LabelPlacement.betweenTicks,
+            maximumLabels: 100,
+            autoScrollingDelta: 10,
+            majorGridLines: MajorGridLines(width: 0),
+            majorTickLines: MajorTickLines(width: 0),
+          ),
+          zoomPanBehavior: ZoomPanBehavior(
+            enablePanning: true,
           ),
           tooltipBehavior: TooltipBehavior(enable: true),
           series: <ChartSeries<TempModel, String>>[

@@ -27,7 +27,7 @@ static bool isEmailValid(email){
 }
 
   static String changeDateFormat(String date){
-    final format22 = new DateFormat('dd-MM-yyyy',"en-US");
+    final format22 = new DateFormat('yyyy-MM-dd',"en-US");
     DateFormat format=DateFormat("dd MMM");
     DateTime dateTime=format22.parse(date);
     return format.format(dateTime);

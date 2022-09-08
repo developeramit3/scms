@@ -11,6 +11,7 @@ import 'package:scms/ui/Home/m/user_model.dart';
 import '../../../Utils/lock_overlay.dart';
 import '../../../Utils/tools.dart';
 import '../../../generated/l10n.dart';
+import '../../../services/project_model.dart';
 import '../m/delay_response.dart';
 import '../m/project_response.dart';
 
@@ -19,11 +20,15 @@ class HomeController extends ControllerMVC {
   ProjectResponse? projectResponse;
   List<DelayResponse> delayList = [];
   UserModel? user;
+  ProjectModel? model;
   String selectedProject="";
-
+  double dump_volume=0;
   HomeController() {
     getUser().then((value) {
       user = value;
+    });
+    getSelectedProject().then((value){
+      model=value;
     });
   }
 
@@ -44,6 +49,7 @@ class HomeController extends ControllerMVC {
   }
 
   void getDelay() {
+    delayList.clear();
     DatabaseReference ref = FirebaseDatabase.instance.ref('Delay/$selectedProject');
     ref.onValue.listen((event) {
       for (final element in event.snapshot.children) {
@@ -54,7 +60,6 @@ class HomeController extends ControllerMVC {
         ));
       }
       isLoadingDelay=false;
-      print('delayList ${delayList.length}');
       notifyListeners();
     }, onError: (error) {
       isLoadingDelay=false;
@@ -81,6 +86,8 @@ class HomeController extends ControllerMVC {
         FirebaseDatabase.instance.ref('projectdetails/$selectedProject');
     ref.set(projectResponse!.toMap());
     ref_Delay.remove();
+    getDelay();
+    dump_volume=0;
     ref_projectdetails
         .orderByChild('file_type')
         .equalTo(2)
@@ -88,12 +95,11 @@ class HomeController extends ControllerMVC {
         .listen((event) {
       for (final element in event.snapshot.children) {
         String key = element.key.toString();
-        dynamic details = element.child("details").value;
         dynamic shotcrete_application_package =
             element.child("shotcrete_application_package").value;
         if (shotcrete_application_package) {
-          Map<String, dynamic> map =
-              jsonDecode(details)['shotcrete_application_package'];
+          Map<String, dynamic> map_a = getValue(element);
+          Map<String, dynamic> map = map_a['shotcrete_application_package']!=null?map_a['shotcrete_application_package']:Map();
           map['volume'] = "0";
           map['dump_volume'] = "0";
           map['euipment_performance_date'] = "";
@@ -105,8 +111,7 @@ class HomeController extends ControllerMVC {
     LockOverlay().closeOverlay();
   }
   void getDumvalue() {
-    double dump_volume=0;
-    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    dump_volume=0;
     DatabaseReference ref_projectdetails =
         FirebaseDatabase.instance.ref('projectdetails/$selectedProject');
     ref_projectdetails
@@ -115,18 +120,26 @@ class HomeController extends ControllerMVC {
         .onValue
         .listen((event) {
       for (final element in event.snapshot.children) {
-        dynamic details = element.child("details").value;
         dynamic shotcrete_application_package = element.child("shotcrete_application_package").value;
         if (shotcrete_application_package) {
-          Map<String, dynamic> map = jsonDecode(details)['shotcrete_application_package'];
-          if(map['dump_volume']!=null){
-            double volume = double.tryParse(map['dump_volume'])??0;
-            dump_volume = dump_volume + volume;
+          Map<String, dynamic> map_a = getValue(element);
+          if(map_a['shotcrete_application_package']!=null){
+            Map<String, dynamic> map = map_a['shotcrete_application_package'];
+            if(map['dump_volume']!=null){
+              double volume = double.tryParse(map['dump_volume'])??0;
+              dump_volume = dump_volume + volume;
+            }
           }
         }
       }
     });
-    LockOverlay().closeOverlay();
+  }
+  Map<String,dynamic>getValue(element){
+    try {
+      return jsonDecode(element.child("details").value.toString());
+    } catch (e, s) {
+      return {};
+    }
 
   }
 }

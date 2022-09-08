@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:scms/Utils/theme_color.dart';
@@ -298,66 +300,66 @@ class AddTaskDailogWidget extends StatelessWidget {
   );
   void bindData(context){
     map['name']=name.value.text.toString();
-    List<Map<String,dynamic>>array=[];
+    List<String>array=[];
     if(map['qa_qc_package']){
       Map<String,dynamic>temp=Map();
       temp['load']=1;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(map['qa_qc_package_01']){
       Map<String,dynamic>temp=Map();
       temp['load']=2;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(map['qa_qc_package_02']){
       Map<String,dynamic>temp=Map();
       temp['load']=3;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(map['qa_qc_package_03']){
       Map<String,dynamic>temp=Map();
       temp['load']=4;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(map['qa_qc_package_04']){
       Map<String,dynamic>temp=Map();
       temp['load']=5;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(temp_map['qa_qc_package_05']){
       Map<String,dynamic>temp=Map();
       temp['load']=6;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(temp_map['qa_qc_package_06']){
       Map<String,dynamic>temp=Map();
       temp['load']=7;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(temp_map['qa_qc_package_07']){
       Map<String,dynamic>temp=Map();
       temp['load']=8;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(temp_map['qa_qc_package_08']){
       Map<String,dynamic>temp=Map();
       temp['load']=9;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     if(temp_map['qa_qc_package_09']){
       Map<String,dynamic>temp=Map();
       temp['load']=10;
       temp['data']="";
-      array.add(temp);
+      array.add(jsonEncode(temp));
     }
     map['qa_qc_package_object']=array.toString();
     print("map ${map.toString()}");

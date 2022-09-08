@@ -7,6 +7,7 @@ import 'package:scms/widgets/input_widget.dart';
 
 import '../../../generated/l10n.dart';
 import '../../../services/session_repo.dart';
+import '../../../widgets/header_txt_widget.dart';
 import '../c/project_list_controller.dart';
 
 class ProjectListPage extends StatefulWidget {
@@ -31,70 +32,67 @@ class _PageState extends StateMVC<ProjectListPage> {
     return Scaffold(
       key: _con!.scaffoldKey,
       backgroundColor: Theme.of(context).backgroundColor,
-        body:Container(
-          child: Stack(
-            children: [
-              Positioned(
-                child: Image.asset('assets/img/top_header_logo.png',height: 40,),
-                left: 20,
-                top: 50,
+        body:Stack(
+          children: [
+            Positioned(
+              left: 20,
+              right: 20,
+              top: 60,
+              child: Center(
+                child: HeaderTxtWidget('PROJECT LISTS',color: ThemeColor.hexToColor('#6493C1'),),
               ),
-              Positioned(
-                child: Image.asset('assets/img/compay_logo.png',height: 70,),
-                left: 20,
-                bottom: 50,
-              ),
-              Positioned(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ButtonPrimaryWidget(S.of(context).project_1,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
+            ),
+            Positioned(left: 20,right: 20,top: 1,bottom: 1,
+              child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ButtonPrimaryWidget(S.of(context).project_1,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
+                Map<String,dynamic>map=Map();
+                map['project']="A";
+                map['project_real_name']=S.of(context).project_1;
+                map['project_total_volume']=1069;
+                map['project_total_wastage']=85.52;
+                map['was_per']=0.08;
+                setSelectedProject(map);
+                Navigator.pushNamed(context, '/home',arguments: map);
+                },),
+                const SizedBox(height: 20,),
+                ButtonPrimaryWidget(S.of(context).project_2,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
                   Map<String,dynamic>map=Map();
-                  map['project']="A";
-                  map['project_real_name']=S.of(context).project_1;
-                  map['project_total_volume']=1069;
-                  map['project_total_wastage']=85.52;
-                  map['was_per']=0.08;
+                  map['project']="B";
+                  map['project_real_name']=S.of(context).project_2;
+                  map['project_total_volume']=1000;
+                  map['project_total_wastage']=100;
+                  map['was_per']=0.10;
                   setSelectedProject(map);
                   Navigator.pushNamed(context, '/home',arguments: map);
-                  },),
-                  const SizedBox(height: 20,),
-                  ButtonPrimaryWidget(S.of(context).project_2,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
-                    Map<String,dynamic>map=Map();
-                    map['project']="B";
-                    map['project_real_name']=S.of(context).project_2;
-                    map['project_total_volume']=1000;
-                    map['project_total_wastage']=100;
-                    map['was_per']=0.10;
-                    setSelectedProject(map);
-                    Navigator.pushNamed(context, '/home',arguments: map);
-                  },),
-                  const SizedBox(height: 20,),
-                  ButtonPrimaryWidget(S.of(context).project_3,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
-                    Map<String,dynamic>map=Map();
-                    map['project']="C";
-                    map['project_real_name']=S.of(context).project_3;
-                    map['project_total_volume']=628160;
-                    map['project_total_wastage']=62816;
-                    map['was_per']=0.10;
-                    setSelectedProject(map);
-                    Navigator.pushNamed(context, '/home',arguments: map);
-                  },),
-                  const SizedBox(height: 20,),
-                  ButtonPrimaryWidget(S.of(context).project_4,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
-                    Map<String,dynamic>map=Map();
-                    map['project']="D";
-                    map['project_real_name']=S.of(context).project_4;
-                    map['project_total_volume']=1000;
-                    map['project_total_wastage']=100;
-                    map['was_per']=0.10;
-                    setSelectedProject(map);
-                    Navigator.pushNamed(context, '/home',arguments: map);
-                  },),
-                ],
-              ),left: 20,right: 20,top: 1,bottom: 1,),
-            ],
-          ),
+                },),
+                const SizedBox(height: 20,),
+                ButtonPrimaryWidget(S.of(context).project_3,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
+                  Map<String,dynamic>map=Map();
+                  map['project']="C";
+                  map['project_real_name']=S.of(context).project_3;
+                  map['project_total_volume']=628160;
+                  map['project_total_wastage']=62816;
+                  map['was_per']=0.10;
+                  setSelectedProject(map);
+                  Navigator.pushNamed(context, '/home',arguments: map);
+                },),
+                const SizedBox(height: 20,),
+                ButtonPrimaryWidget(S.of(context).project_4,color: Colors.white,txtColor: ThemeColor.colorPrimary,padding: 12,onTap: (){
+                  Map<String,dynamic>map=Map();
+                  map['project']="D";
+                  map['project_real_name']=S.of(context).project_4;
+                  map['project_total_volume']=1000;
+                  map['project_total_wastage']=100;
+                  map['was_per']=0.10;
+                  setSelectedProject(map);
+                  Navigator.pushNamed(context, '/home',arguments: map);
+                },),
+              ],
+            ),),
+          ],
         )
     );
   }

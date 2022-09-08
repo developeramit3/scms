@@ -1,11 +1,14 @@
 
+import 'dart:convert';
+
 import 'package:scms/generated/l10n.dart';
+import 'package:scms/ui/Task/m/task_details_model.dart';
 
 class TaskResponse {
   dynamic key;
   dynamic name;
   dynamic file_type;
-  dynamic details;
+  TaskDetailsModel? details;
   dynamic qa_qc_package;
   dynamic qa_qc_package_01;
   dynamic qa_qc_package_02;
@@ -20,7 +23,8 @@ class TaskResponse {
   dynamic chemical_added;
   dynamic attachment_link;
   dynamic signature;
-  dynamic qa_qc_package_object;
+  List<DetailsModel>? qa_qc_package_object;
+
   TaskResponse({
      this.key,
      this.name,
@@ -39,11 +43,14 @@ class TaskResponse {
      this.chemical_added,
      this.attachment_link,
      this.signature,
-     this.qa_qc_package_object,
+    this.qa_qc_package_object,
      this.details});
-  Map<String,dynamic>toMap(){
-    Map<String,dynamic>map=Map();
 
-    return map;
+  List<String> toQA() {
+    List<String> list = [];
+    qa_qc_package_object!.forEach((element) {
+      list.add(jsonEncode(element.toMap()));
+    });
+    return list;
   }
 }

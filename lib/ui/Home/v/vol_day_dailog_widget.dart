@@ -13,7 +13,10 @@ class VolDayDailogWidget extends StatelessWidget {
   callback? listener;
   var number = TextEditingController();
   String? error;
-  VolDayDailogWidget({this.listener});
+  String oldVal;
+  VolDayDailogWidget(this.oldVal,{this.listener}){
+   number.text=oldVal;
+  }
 
   @override
   Widget build(BuildContext context) => Wrap(

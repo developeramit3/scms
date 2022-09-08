@@ -58,7 +58,6 @@ Future<UserModel>getUser() async{
 }
 Future<ProjectModel>getSelectedProject() async{
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  print("selected_project===> ${prefs.getString('selected_project')}");
   return ProjectModel.fromJson(jsonDecode(prefs.getString('selected_project')!));
 }
 
