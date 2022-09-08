@@ -20,8 +20,8 @@ class LoginController extends ControllerMVC {
   bool isVerified=false;
 
   LoginController() {
-    email.text="admin@gmail.com";
-    password.text="admin2022";
+    // email.text="admin@gmail.com";
+    // password.text="admin2022";
   }
 
   bool validate() {

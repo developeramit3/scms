@@ -9,7 +9,7 @@ class ProjectResponse {
   ProjectResponse.fromJson(Map<String, dynamic> json)
       : volume = json["volume"],
         start_day = json["start_day"]??"",
-        volume_complete_day = json["volume_complete_day"]??"";
+        volume_complete_day = json["volume_complete_day"]??0;
 
   Map<String,dynamic>toMap(){
     Map<String,dynamic>map=Map();

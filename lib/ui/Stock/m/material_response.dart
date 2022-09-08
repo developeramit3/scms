@@ -14,11 +14,11 @@ class MaterialResponse {
      this.hsc});
   Map<String,dynamic>toMap(){
     Map<String,dynamic>map=Map();
-    map['accelerator']=accelerator;
-    map['super_plaster_size']=super_plaster_size;
-    map['fiber_1']=fiber_1;
-    map['fiber_2']=fiber_2;
-    map['hsc']=hsc;
+    map['accelerator']=accelerator??"0";
+    map['super_plaster_size']=super_plaster_size??"0";
+    map['fiber_1']=fiber_1??"0";
+    map['fiber_2']=fiber_2??"0";
+    map['hsc']=hsc??"0";
     return map;
   }
 }

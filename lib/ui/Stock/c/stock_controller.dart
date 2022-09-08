@@ -51,17 +51,11 @@ class StockController extends ControllerMVC {
     ref_projectdetails.child("Usage").set(materialResponse!.toMap());
       notifyListeners();
   }
-  void deleteTask(file_type,key) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('projectdetails/$selectedProject/$key');
-    ref_projectdetails.remove();
 
-  }
-  void addMaterial(val) {
+  void addMaterial(int type,val) {
     DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('Matatial/${selectedProject!.project}/');
-    String key=ref_projectdetails.push().key.toString();
-    ref_projectdetails.child(key).update(val);
+    FirebaseDatabase.instance.ref('Matatial/${selectedProject!.project}/').child(type==0?"Usage":"Stock");
+    ref_projectdetails.set(val);
 
   }
 

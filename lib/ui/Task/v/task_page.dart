@@ -28,8 +28,9 @@ class _PageState extends StateMVC<TaskPage> {
   @override
   void initState() {
     super.initState();
-    _con!.selectedProject = widget.selectedProject;
-    _con!.getTask(file_type);
+    Future.delayed(Duration(seconds: 2),() {
+      _con!.getTask(file_type);
+    },);
   }
 
   @override
@@ -201,20 +202,30 @@ class _PageState extends StateMVC<TaskPage> {
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: HeaderTxtWidget(
-                        "Task details form ${_con!.taskList[index].name}",
-                        fontSize: 18,
+                InkWell(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: HeaderTxtWidget(
+                          "Task details form ${_con!.taskList[index].name}",
+                          fontSize: 18,
+                        ),
+                        flex: 1,
                       ),
-                      flex: 1,
-                    ),
-                    IconButton(onPressed: () {
-                      _con!.deleteTask(file_type,_con!.taskList[index].key);
-                      _con!.taskList.removeAt(index);
-                    }, icon: Icon(Icons.delete)),
-                  ],
+                      IconButton(onPressed: () {
+                        _con!.deleteTask(file_type,_con!.taskList[index].key);
+                        _con!.taskList.removeAt(index);
+                      }, icon: Icon(Icons.delete)),
+                    ],
+                  ),
+                  onTap: (){
+                  Navigator.pushNamed(context, '/task_details',arguments: _con!.taskList[index]).then((value){
+                    if(value!=null){
+                      file_type=value as int;
+                      _con!.getTask(file_type);
+                    }
+                  });
+                  },
                 ),
                 Divider(
                   color: Colors.grey.shade400,

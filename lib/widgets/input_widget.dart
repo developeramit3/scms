@@ -8,11 +8,12 @@ String? sub_title;
 var controller;
 bool enabled;
 var inputType;
+var onChanged;
 Color? color;
 String? sufix;
 String? hint;
 double? height;
-InputWidget({this.controller,this.inputType=TextInputType.text,this.sufix,this.enabled=true,this.color,this.sub_title,this.height,this.hint});
+InputWidget({this.controller,this.inputType=TextInputType.text,this.sufix,this.enabled=true,this.color,this.sub_title,this.height,this.hint,this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -20,20 +21,26 @@ InputWidget({this.controller,this.inputType=TextInputType.text,this.sufix,this.e
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if(sub_title!=null)
-          SubTxtWidget(sub_title!),
+          SubTxtWidget(sub_title!,color: color,),
         Container(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          padding: EdgeInsets.symmetric(horizontal: 8),
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           height: height??50,
           alignment: AlignmentDirectional.topCenter,
+          decoration: BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+              color: color??Colors.white,
+              border: Border.all(color: ThemeColor.colorPrimary)
+          ),
           child: Row(
             children: [
-              Expanded(child: TextFormField(
+              Expanded(flex: 1,child: TextFormField(
                 enabled:enabled ,
-                controller: controller!=null?controller:TextEditingController(),
+                controller: controller ??TextEditingController(),
                 keyboardType: inputType,
                 maxLines: 4,
-                style: TextStyle(
+                onChanged:onChanged,
+                style: const TextStyle(
                   fontFamily:'Schyler',
                 ),
                 decoration: InputDecoration(
@@ -44,20 +51,9 @@ InputWidget({this.controller,this.inputType=TextInputType.text,this.sufix,this.e
                   hintText: hint??"",
                   counterText: ""
                 ),
-                validator: (value) {
-                  /*if (value == null || value.isEmpty) {
-                    return S.of(context).fieldRequired;
-                  }*/
-                  return null;
-                },
-              ), flex: 1,),
-              Visibility(child: SubTxtWidget("${sufix}"),visible: sufix!=null,)
+              ),),
+              Visibility(visible: sufix!=null,child: SubTxtWidget("${sufix}"),)
             ],
-          ),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              color: color??Colors.white,
-              border: Border.all(color: ThemeColor.colorPrimary)
           ),
         )
       ],

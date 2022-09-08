@@ -10,22 +10,17 @@ import 'package:scms/widgets/sub_txt_widget.dart';
 
 import '../c/stock_controller.dart';
 class AddStockPage extends StatefulWidget {
-
+  StockController con;
   @override
   _PageState createState() => _PageState();
-
+  AddStockPage(this.con);
 }
-
-class _PageState extends StateMVC<AddStockPage> {
-  StockController? _con;
+class _PageState extends State<AddStockPage> {
   var Accelerator = TextEditingController();
   var Superplastersizer = TextEditingController();
   var HCA = TextEditingController();
   var Mono = TextEditingController();
   var Duro = TextEditingController();
-  _PageState() : super(StockController()) {
-    _con = controller as StockController?;
-  }
 
   @override
   void initState() {
@@ -35,7 +30,6 @@ class _PageState extends StateMVC<AddStockPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _con!.scaffoldKey,
       appBar: AppBar(
         backgroundColor: Theme.of(context).backgroundColor,
         elevation: 0,
@@ -67,12 +61,12 @@ class _PageState extends StateMVC<AddStockPage> {
               ChipWidget('SAVE',width: 150,onTap: (){
                 if(Validate()){
                   Map<String,dynamic>map=Map();
-                  map['accelerator']=Accelerator.value.text.toString();
-                  map['super_plaster_size']=Superplastersizer.value.text.toString();
-                  map['hsc']=HCA.value.text.toString();
-                  map['fiber_1']=Mono.value.text.toString();
-                  map['fiber_2']=Duro.value.text.toString();
-                  _con!.addMaterial(map);
+                  map['accelerator']=getVal(widget.con.materialResponse!.accelerator,Accelerator.value.text.toString());
+                  map['super_plaster_size']=getVal(widget.con.materialResponse!.super_plaster_size,Superplastersizer.value.text.toString());
+                  map['hsc']=getVal(widget.con.materialResponse!.hsc,HCA.value.text.toString());
+                  map['fiber_1']=getVal(widget.con.materialResponse!.fiber_1,Mono.value.text.toString());
+                  map['fiber_2']=getVal(widget.con.materialResponse!.fiber_2,Duro.value.text.toString());
+                  widget.con.addMaterial(1,map);
                   Navigator.pop(context,true);
                 }
               },),
@@ -103,6 +97,15 @@ class _PageState extends StateMVC<AddStockPage> {
     }
 
     return true;
+  }
+  String getVal(String old, String New){
+    if(New.isEmpty){
+      return old;
+    }else {
+      double val=double.tryParse(old)??0;
+      double val_new=double.tryParse(New)??0;
+      return (val+val_new).toString();
+    }
   }
 
 }

@@ -73,20 +73,30 @@ class PersonnelPerformanceController extends ControllerMVC {
         .onValue
         .listen((event) {
       for (final element in event.snapshot.children) {
-        dynamic details = element.child("details").value;
         dynamic shotcrete_application_package = element.child("shotcrete_application_package").value;
         if (shotcrete_application_package) {
-          Map<String, dynamic> map = jsonDecode(details)['shotcrete_application_package'];
-          String nameID=map['name_id_nozzleman_push_key'].toString();
+          Map<String, dynamic> map_a = getValueJson(element);
+          if(map_a['shotcrete_application_package']!=null){
+          Map<String, dynamic> map = map_a['shotcrete_application_package'];
+          String nameID=map['name_id_nozzleman'].toString();
           if(nameID==id && map['volume']!=null){
             double volume = double.tryParse(map['volume'])??0;
             totalVolume = totalVolume + volume;
           }
-        }
+        }}
       }
       isLoading=false;
       notifyListeners();
     });
+  }
+  Map<String,dynamic>getValueJson(element){
+
+    try {
+      return jsonDecode(element.child("details").value.toString());
+    } catch (e, s) {
+      return {};
+    }
+
   }
   void reset() {
     LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
@@ -103,9 +113,9 @@ class PersonnelPerformanceController extends ControllerMVC {
         dynamic shotcrete_application_package =
             element.child("shotcrete_application_package").value;
         if (shotcrete_application_package) {
-          Map<String, dynamic> map =
-          jsonDecode(details)['shotcrete_application_package'];
-          String nameID=map['name_id_nozzleman_push_key'].toString();
+          Map<String, dynamic> map_a = getValueJson(element);
+          Map<String, dynamic> map = map_a['shotcrete_application_package']!=null?map_a['shotcrete_application_package']:Map();
+          String nameID=map['name_id_nozzleman_push_key']==null?"":map['name_id_nozzleman_push_key'].toString();
           if(nameID==id){
             map['volume'] = "0";
           }
@@ -115,4 +125,5 @@ class PersonnelPerformanceController extends ControllerMVC {
     });
     LockOverlay().closeOverlay();
   }
+
 }
