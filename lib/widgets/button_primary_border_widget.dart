@@ -23,6 +23,7 @@ this.marginHorizontal});
       onTap: paused?null:onTap,
       child: Container(
         width: width??wi,
+        height: 45,
         padding: EdgeInsets.all(padding??8),
         margin:EdgeInsets.symmetric(vertical: 5,horizontal: marginHorizontal??5),
         foregroundDecoration:paused? BoxDecoration(
@@ -30,8 +31,9 @@ this.marginHorizontal});
           backgroundBlendMode: BlendMode.screen,
         ):null,
         decoration: BoxDecoration(
+            color: Colors.grey.shade100,
           border: Border.all(color: color?? ThemeColor.colorPrimary,),
-            borderRadius:  BorderRadius.all(Radius.circular(radius??5))
+            borderRadius:  BorderRadius.all(Radius.circular(radius??20))
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

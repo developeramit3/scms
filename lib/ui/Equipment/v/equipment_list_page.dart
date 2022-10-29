@@ -23,32 +23,16 @@ class _PageState extends StateMVC<EquipmentListPage> {
   @override
   void initState() {
     super.initState();
-    _con!.getEquipment();
+
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _con!.scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Equipment Performance',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ), 
       persistentFooterButtons:[
          Center(
-           child: ChipWidget('ADD',width: 100,onTap: (){
+           child: ChipWidget('ADD',width: 150,onTap: (){
              showDialog(
                context: context,
                builder: (BuildContext context) {
@@ -74,7 +58,7 @@ class _PageState extends StateMVC<EquipmentListPage> {
   }
 
   Widget _files() {
-    if (_con!.isLoading) {
+    if (_con!.equipmentResponse==null) {
       return Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade500,
@@ -99,7 +83,7 @@ class _PageState extends StateMVC<EquipmentListPage> {
       return Expanded(
           child: ListView.builder(
         itemBuilder: (context, index) {
-          EquipmentResponse response=_con!.list[index];
+          Equipment response=_con!.equipmentResponse!.list[index];
           return Container(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
             child: Column(
@@ -122,14 +106,14 @@ class _PageState extends StateMVC<EquipmentListPage> {
                                 contentPadding: EdgeInsets.zero,
                                 backgroundColor: Colors.transparent,
                                 content:AddEquipmentWidget(listener: (val){
-                                  _con!.updateEquipment(response.key,val);
+                                 _con!.updateEquipment(response.id,val);
                                 },val: response.name,)
                             );
                           },
                         );
                       }, icon: Icon(Icons.edit)),
                       IconButton(onPressed: () {
-                        _con!.deleteEquipment(response.key);
+                       _con!.deleteEquipment(response.id);
                       }, icon: Icon(Icons.delete)),
                     ],
                   ),
@@ -145,7 +129,7 @@ class _PageState extends StateMVC<EquipmentListPage> {
             ),
           );
         },
-        itemCount: _con!.list.length,
+        itemCount: _con!.equipmentResponse!.list.length,
       ));
     }
   }

@@ -60,13 +60,16 @@ class _PageState extends State<AddStockPage> {
               const SizedBox(height: 20,),
               ChipWidget('SAVE',width: 150,onTap: (){
                 if(Validate()){
-                  Map<String,dynamic>map=Map();
-                  map['accelerator']=getVal(widget.con.materialResponse!.accelerator,Accelerator.value.text.toString());
-                  map['super_plaster_size']=getVal(widget.con.materialResponse!.super_plaster_size,Superplastersizer.value.text.toString());
-                  map['hsc']=getVal(widget.con.materialResponse!.hsc,HCA.value.text.toString());
-                  map['fiber_1']=getVal(widget.con.materialResponse!.fiber_1,Mono.value.text.toString());
-                  map['fiber_2']=getVal(widget.con.materialResponse!.fiber_2,Duro.value.text.toString());
-                  widget.con.addMaterial(1,map);
+                  widget.con.materialResponse!.accelerator=getVal(widget.con.materialResponse!.accelerator,Accelerator.value.text.toString());
+                  widget.con.materialResponse!.super_plaster_size=getVal(widget.con.materialResponse!.super_plaster_size,Superplastersizer.value.text.toString());
+                  widget.con.materialResponse!.hsc=getVal(widget.con.materialResponse!.hsc,HCA.value.text.toString());
+                  widget.con.materialResponse!.fiber_1=getVal(widget.con.materialResponse!.fiber_1,Mono.value.text.toString());
+                  widget.con.materialResponse!.fiber_2=getVal(widget.con.materialResponse!.fiber_2,Duro.value.text.toString());
+                  if(widget.con.materialResponse!.id==null) {
+                    widget.con.addMaterial(widget.con.materialResponse!);
+                  }else{
+                    widget.con.updateMaterial(widget.con.materialResponse!);
+                  }
                   Navigator.pop(context,true);
                 }
               },),

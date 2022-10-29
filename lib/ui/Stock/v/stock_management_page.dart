@@ -32,26 +32,10 @@ class _PageState extends StateMVC<StockManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _con!.scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Stock Management',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ), 
       persistentFooterButtons:[
         if((_con!.user!=null&&_con!.user!.user_type=="0")||type==1)
          Center(
-           child: ChipWidget(type==0?'Reset':'Add Stock',width: 100,onTap: (){
+           child: ChipWidget(type==0?'Reset':'Add Stock',width: 150,onTap: (){
              if(type==0){
                _con!.resetMaterial();
              }else{

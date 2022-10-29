@@ -131,9 +131,9 @@ class _PageState extends StateMVC<AddSchedulePage> {
               ),
               Row(
                 children: [
-                  Radio(value: SelectedValue, groupValue: 'Schedule', onChanged:(v){
+                  Radio(value: SelectedValue, groupValue: '0', onChanged:(v){
                     setState(() {
-                      SelectedValue="Schedule";
+                      SelectedValue="0";
                     });
                   }),
                   HeaderTxtWidget('Schedule',fontSize: 16,),
@@ -141,9 +141,9 @@ class _PageState extends StateMVC<AddSchedulePage> {
               ),
               Row(
                 children: [
-                  Radio(value: SelectedValue, groupValue: 'Completed', onChanged:(v){
+                  Radio(value: SelectedValue, groupValue: '1', onChanged:(v){
                     setState(() {
-                      SelectedValue="Completed";
+                      SelectedValue="1";
                     });
 
                   }),
@@ -158,8 +158,9 @@ class _PageState extends StateMVC<AddSchedulePage> {
                   Map<String,dynamic>map=Map();
                   map['start_date']=StartDate;
                   map['end_date']=EndDate;
+                  map['type']=SelectedValue;
                   map['details']=Details.value.text.toString();
-                  _con!.addSchedule(SelectedValue, map);
+                  _con!.addSchedule(map);
                   Navigator.pop(context,true);
                 }
               },),

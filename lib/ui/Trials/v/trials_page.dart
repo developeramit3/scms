@@ -31,26 +31,10 @@ class _PageState extends StateMVC<TrialsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _con!.scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Trials',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ), 
       persistentFooterButtons:[
-        if(_con!.user!=null&&_con!.user!.user_type=="0"&&type!=2)
+        if(_con!.user!=null&&_con!.user!.user_type=="1"&&type!=2)
          Center(
-           child: ChipWidget('ADD FILE',width: 100,onTap: () async {
+           child: ChipWidget('ADD FILE',width: 150,onTap: () async {
             Navigator.pushNamed(context, '/add_trials');
            },),
          )
@@ -78,7 +62,7 @@ class _PageState extends StateMVC<TrialsPage> {
                     onTap: (){
                       if(type!=0){
                         type=0;
-                        _con!.getTrails(type);
+                        _con!.Refresh(type);
                       }
                     },
                   )
@@ -107,7 +91,7 @@ class _PageState extends StateMVC<TrialsPage> {
                     onTap: (){
                       if(type!=1){
                         type=1;
-                        _con!.getTrails(type);
+                        _con!.Refresh(type);
                       }
                     },
                   )
@@ -136,7 +120,7 @@ class _PageState extends StateMVC<TrialsPage> {
                     onTap: (){
                       if(type!=2){
                         type=2;
-                        _con!.getTrails(type);
+                        _con!.Refresh(type);
                       }
                     },
                   )
@@ -202,7 +186,7 @@ class _PageState extends StateMVC<TrialsPage> {
                                 ),
                                 if(type==2)
                                   SubTxtWidget(
-                                    "File: ${_con!.list[index].filename}",
+                                    "File: ${_con!.list[index].file_name}",
                                     fontSize: 16,
                                   ),
                               ],
@@ -215,13 +199,13 @@ class _PageState extends StateMVC<TrialsPage> {
                                 allowedExtensions: ['ppt', 'pdf', 'doc'],
                               ).then((value){
                                 if(value!=null){
-                                  _con!.addFile(_con!.list[index],value.files.first);
+                                  _con!.addFile(_con!.list[index],value.files.first,type);
                                 }
                               });
                             }, icon: Icon(Icons.file_upload_outlined,size: 30,)),
                           if(_con!.user!.user_type=="0")
                             IconButton(onPressed: () {
-                              _con!.deleteTrials(type,_con!.list[index].key);
+                              _con!.deleteTrials(type,_con!.list[index].id);
                             }, icon: Icon(Icons.delete)),
                         ],
                       ),

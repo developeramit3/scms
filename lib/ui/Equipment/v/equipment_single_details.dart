@@ -13,10 +13,9 @@ import '../../../Utils/tools.dart';
 import '../../../widgets/sub_txt_widget.dart';
 import '../c/equipment_controller.dart';
 import '../m/equipment_response.dart';
-import 'add_equipment_widget.dart';
 
 class EquipmentSingleDetails extends StatefulWidget {
-  EquipmentResponse data;
+  Equipment data;
   @override
   _PageState createState() => _PageState();
   EquipmentSingleDetails(this.data);
@@ -81,7 +80,6 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
                     onTap: (){
                       if(type!=0){
                         setState(() { type=0;});
-                        // _con!.getMaterial(type);
                       }
                     },
                   )
@@ -112,7 +110,7 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
                         setState(() {
                           type=1;
                         });
-                        _con!.getShedule(sub_type);
+                        _con!.getShedule("0");
                       }
                     },
                   )
@@ -141,7 +139,7 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
                     onTap: (){
                       if(type!=2){
                         type=2;
-                        _con!.getShedule(type);
+                        _con!.getShedule("2");
                       }
                     },
                   )
@@ -171,7 +169,7 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
                       onTap: (){
                         if(sub_type!=0){
                           sub_type=0;
-                          _con!.getShedule(sub_type);
+                          _con!.getShedule("0");
                         }
                       },
                     )
@@ -200,7 +198,7 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
                       onTap: (){
                         if(sub_type!=1){
                           sub_type=1;
-                          _con!.getShedule(sub_type);
+                          _con!.getShedule('1');
                         }
                       },
                     )
@@ -213,7 +211,7 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
       persistentFooterButtons:[
         if((_con!.user!=null&&_con!.user!.user_type=="0")||type==1)
           Center(
-            child: ChipWidget(type==0?'RESET':'ADD',width: 100,onTap: () async {
+            child: ChipWidget(type==0?'RESET':'ADD',width: 150,onTap: () async {
               if(type==0){
                 _con!.resetSchedule(widget.data);
               }else if(type==1){
@@ -262,12 +260,12 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
     }else{
       return Expanded(child: Column(
         children: [
-          HeaderTxtWidget('Performance'),
+          HeaderTxtWidget('Performance (Volume)'),
           Expanded(flex: 1,child: Container(
             padding: EdgeInsets.only(top: 20),
             child: SfCartesianChart(
                 primaryXAxis: CategoryAxis(
-                  labelRotation: -45,
+                  labelRotation: 0,
                   maximumLabels: 100,
                   interval: 1,
                   autoScrollingDelta: 10,
@@ -291,12 +289,12 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
                       dataLabelSettings: DataLabelSettings(isVisible: true,))]
             ),
           ),),
-          HeaderTxtWidget('Breakdown'),
+          HeaderTxtWidget('Breakdown (Working Hours)'),
           Expanded(flex: 1,child: Container(
             padding: EdgeInsets.only(top: 20),
             child: SfCartesianChart(
                 primaryXAxis: CategoryAxis(
-                  labelRotation: -45,
+                  labelRotation: 0,
                   maximumLabels: 100,
                   arrangeByIndex: false,
                   autoScrollingDelta: 10,
@@ -376,7 +374,7 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
 
                           if(_con!.user!.user_type=="0")
                             IconButton(onPressed: () {
-                              _con!.deleteSchedule(type,_con!.list[index].key);
+                             _con!.deleteSchedule(type,_con!.schedule_list[index].id);
                             }, icon: Icon(Icons.delete)),
                         ],
                       ),
@@ -387,9 +385,7 @@ class _PageState extends StateMVC<EquipmentSingleDetails> {
                     ],
                   ),
                   onTap: (){
-                    if(type==2){
-                      // _con!.downloadFile(_con!.list[index]);
-                    }
+
                   },
                 ),
               );

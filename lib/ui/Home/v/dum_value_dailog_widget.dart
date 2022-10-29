@@ -24,7 +24,6 @@ class DumpValueDailogWidget extends StatelessWidget {
       children: [
         Container(
           padding: EdgeInsets.only(bottom: 10),
-          height: MediaQuery.of(context).size.height,
           decoration: BoxDecoration(
               borderRadius: new BorderRadius.only(
                 topLeft: const Radius.circular(20.0),
@@ -35,7 +34,7 @@ class DumpValueDailogWidget extends StatelessWidget {
           child: Stack(
             children: [
               Container(
-                height: MediaQuery.of(context).size.height/4,
+                height: 250,
                 decoration: BoxDecoration(
                     color: ThemeColor.colorPrimary,
                     borderRadius: const BorderRadius.only(

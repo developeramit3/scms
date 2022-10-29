@@ -159,7 +159,8 @@ class _PageState extends StateMVC<AddTrialsPage> {
                   map['start_date']=StartDate;
                   map['end_date']=EndDate;
                   map['details']=Details.value.text.toString();
-                  _con!.addTrials(SelectedValue, map);
+                  map['type']=SelectedValue=="Completed"?1:0;
+                  _con!.addTrials(map);
                   Navigator.pop(context,true);
                 }
               },),

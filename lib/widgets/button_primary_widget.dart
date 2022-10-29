@@ -21,7 +21,9 @@ ButtonPrimaryWidget(this.title,{this.fontSize=16,this.onTap,this.leading,this.co
       onTap: onTap,
       child: Container(
         width: width??wid,
+        height: 45,
         padding: EdgeInsets.all(padding),
+        alignment: AlignmentDirectional.center,
         margin:const EdgeInsets.symmetric(vertical: 5,horizontal: 5),
         decoration: BoxDecoration(
           color: color?? ThemeColor.colorbtnPrimary,
@@ -29,6 +31,7 @@ ButtonPrimaryWidget(this.title,{this.fontSize=16,this.onTap,this.leading,this.co
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if(leading!=null)
               leading,

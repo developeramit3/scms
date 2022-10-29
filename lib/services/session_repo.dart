@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:scms/services/project_model.dart';
+import 'package:scms/globle/m/project_model.dart';
 import 'package:scms/ui/Home/m/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../globle/m/user_details.dart';
 import '../main.dart';
 const String prefSelectedLanguageCode = "SelectedLanguageCode";
 
@@ -51,14 +52,17 @@ Future<String?> getSessionTheme() async{
 }
 
 
-Future<UserModel>getUser() async{
+Future<UserDetails>getUser() async{
   SharedPreferences prefs = await SharedPreferences.getInstance();
   print("userDetails===> ${prefs.getString('data')}");
-  return UserModel.fromJson(jsonDecode(prefs.getString('data')!));
-}
-Future<ProjectModel>getSelectedProject() async{
+  return UserDetails.fromJson(jsonDecode(prefs.getString('data')!));
+}Future<String>getToken() async{
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  return ProjectModel.fromJson(jsonDecode(prefs.getString('selected_project')!));
+  return UserDetails.fromJson(jsonDecode(prefs.getString('data')!)).token;
+}
+Future<Project>getSelectedProject() async{
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return Project.fromJson(jsonDecode(prefs.getString('selected_project')!));
 }
 
 setSelectedProject(data) async {

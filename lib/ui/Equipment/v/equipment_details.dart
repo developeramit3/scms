@@ -27,7 +27,7 @@ class _PageState extends StateMVC<EquipmentDetails> {
   @override
   void initState() {
     super.initState();
-    _con!.getEquipment();
+
   }
 
   @override
@@ -35,48 +35,33 @@ class _PageState extends StateMVC<EquipmentDetails> {
     return Scaffold(
       key: _con!.scaffoldKey,
       backgroundColor: Theme.of(context).backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Equipment Performance',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 20,),
           _files(),
           Expanded(child: _barChart(),flex: 1,),
           Container(padding: EdgeInsets.symmetric(vertical: 10,horizontal: 10),
           color: Colors.white,
           child: Row(
             children: [
-              Icon(Icons.brightness_1,color: Color.fromRGBO(255, 0, 0, 1),size: 15,),
+              Icon(Icons.brightness_1,color: Color.fromRGBO(250, 218, 221, 1),size: 15,),
               const SizedBox(width: 2,),
               SubTxtWidget('Sprayer 1',fontSize: 12,),
               const SizedBox(width: 2,),
-              Icon(Icons.brightness_1,color: Color.fromRGBO(0, 255, 0,1),size: 15,),
+              Icon(Icons.brightness_1,color: Color.fromRGBO(144, 238, 144,1),size: 15,),
               const SizedBox(width: 2,),
               SubTxtWidget('Sprayer 2',fontSize: 12,),
               const SizedBox(width: 2,),
-              Icon(Icons.brightness_1,color: Color.fromRGBO(0, 0, 255,1),size: 15,),
+              Icon(Icons.brightness_1,color: Color.fromRGBO(255, 255, 150,1),size: 15,),
               const SizedBox(width: 2,),
               SubTxtWidget('Sprayer 3',fontSize: 12,),
               const SizedBox(width: 2,),
-              Icon(Icons.brightness_1,color: Color.fromRGBO(255, 51, 255,1),size: 15,),
+              Icon(Icons.brightness_1,color: Color.fromRGBO(135, 206, 235,1),size: 15,),
               const SizedBox(width: 2,),
               SubTxtWidget('Sprayer 4',fontSize: 12,),
               const SizedBox(width: 2,),
-              Icon(Icons.brightness_1,color: Color.fromRGBO(51, 255, 255, 1),size: 15,),
+              Icon(Icons.brightness_1,color: Color.fromRGBO(254, 216, 160, 1),size: 15,),
               const SizedBox(width: 2,),
               SubTxtWidget('Sprayer 5',fontSize: 12,),
 
@@ -89,7 +74,7 @@ class _PageState extends StateMVC<EquipmentDetails> {
   }
 
   Widget _files() {
-    if (_con!.isLoading) {
+    if (_con!.equipmentResponse==null) {
       return Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade500,
@@ -111,17 +96,18 @@ class _PageState extends StateMVC<EquipmentDetails> {
               ],
             )),
       );
-    } else {
+    }
+    else {
       return Expanded(
           flex: 1,
           child: ListView.builder(
         itemBuilder: (context, index) {
-          EquipmentResponse response=_con!.list[index];
+          Equipment response=_con!.equipmentResponse!.list[index];
           return Padding(padding: const EdgeInsets.symmetric(horizontal: 20),child: ButtonPrimaryWidget(response.name,onTap: (){
             Navigator.pushNamed(context, '/equipment_single_details',arguments: response);
           },),);
         },
-        itemCount: _con!.list.length,shrinkWrap: true,
+        itemCount: _con!.equipmentResponse!.list.length,shrinkWrap: true,
       ),);
     }
   }
@@ -160,7 +146,7 @@ class _PageState extends StateMVC<EquipmentDetails> {
         ),
         child: SfCartesianChart(
             primaryXAxis: CategoryAxis(
-              labelRotation: -45,
+              labelRotation: 0,
               autoScrollingDelta: 10,
               arrangeByIndex: false,
               interval: 1,
@@ -179,40 +165,41 @@ class _PageState extends StateMVC<EquipmentDetails> {
                   xValueMapper: (EquipmentBarchatDate sales, _) => sales.delay1==0?null:sales.date,
                   yValueMapper: (EquipmentBarchatDate sales, _){
                     return sales.delay1==0?null:sales.delay1;
-                  },color: Color.fromRGBO(255, 0, 0, 1),
+                  },color: Color.fromRGBO(250, 218, 221, 1),
                   dataLabelSettings: DataLabelSettings(isVisible: true,)),
               ColumnSeries<EquipmentBarchatDate, String>(
                   dataSource:_con!.eq_list,
                   xValueMapper: (EquipmentBarchatDate sales, _) => sales.date,
                   yValueMapper: (EquipmentBarchatDate sales, _){
                     return sales.delay2;
-                  }, color: Color.fromRGBO(0, 255, 0,1),
-
+                  }, color: Color.fromRGBO(144, 238, 144,1),
+                  dataLabelSettings: DataLabelSettings(isVisible: true,)
               ),
+
               ColumnSeries<EquipmentBarchatDate, String>(
                   dataSource:_con!.eq_list,
                   xValueMapper: (EquipmentBarchatDate sales, _) => sales.date,
                   yValueMapper: (EquipmentBarchatDate sales, _){
                     return sales.delay3;
-                  },color: Color.fromRGBO(0, 0, 255,1),
-              ),
+                  },color: Color.fromRGBO(255, 255, 150,1),
+                  dataLabelSettings: DataLabelSettings(isVisible: true,)),
               ColumnSeries<EquipmentBarchatDate, String>(
                   dataSource:_con!.eq_list,
                   xValueMapper: (EquipmentBarchatDate sales, _) => sales.date,
                   yValueMapper: (EquipmentBarchatDate sales, _){
                     return sales.delay4;
                   },
-                  color: Color.fromRGBO(255, 51, 255,1),
+                  color: Color.fromRGBO(135, 206, 235,1),
+                  dataLabelSettings: DataLabelSettings(isVisible: true,)),
 
-              ),
               ColumnSeries<EquipmentBarchatDate, String>(
                   dataSource:_con!.eq_list,
                   xValueMapper: (EquipmentBarchatDate sales, p) => sales.date,
                   yValueMapper: (EquipmentBarchatDate sales, _){
                     return sales.delay5;
                   },
-                  color: Color.fromRGBO(51, 255, 255, 1),
-              ),
+                  color: Color.fromRGBO(254, 216, 160, 1),
+                  dataLabelSettings: DataLabelSettings(isVisible: true,)),
             ],
 
         ),

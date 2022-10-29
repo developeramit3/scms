@@ -10,12 +10,10 @@ import '../../../services/session_repo.dart';
 import '../c/task_controller.dart';
 
 class TaskPage extends StatefulWidget {
-  String selectedProject;
 
   @override
   _PageState createState() => _PageState();
 
-  TaskPage(this.selectedProject);
 }
 
 class _PageState extends StateMVC<TaskPage> {
@@ -37,25 +35,9 @@ class _PageState extends StateMVC<TaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _con!.scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Tasks',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ), 
       persistentFooterButtons:[
          Center(
-           child: ChipWidget('Add More',width: 100,onTap: (){
+           child: ChipWidget('Add More',width: 150,onTap: (){
              showDialog(
                context: context,
                builder: (BuildContext context) {
@@ -213,7 +195,7 @@ class _PageState extends StateMVC<TaskPage> {
                         flex: 1,
                       ),
                       IconButton(onPressed: () {
-                        _con!.deleteTask(file_type,_con!.taskList[index].key);
+                        _con!.deleteTask(_con!.taskList[index].id);
                         _con!.taskList.removeAt(index);
                       }, icon: Icon(Icons.delete)),
                     ],

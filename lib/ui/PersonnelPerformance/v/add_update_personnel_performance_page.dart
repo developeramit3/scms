@@ -4,16 +4,13 @@ import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:scms/Utils/theme_color.dart';
 import 'package:scms/Utils/tools.dart';
 import 'package:scms/ui/PersonnelPerformance/m/performance_response.dart';
-import 'package:scms/ui/Task/v/add_task_dailog_widget.dart';
 import 'package:scms/widgets/chip_widget.dart';
 import 'package:scms/widgets/header_txt_widget.dart';
 import 'package:scms/widgets/input_widget.dart';
 import 'package:scms/widgets/sub_txt_widget.dart';
-import 'package:shimmer/shimmer.dart';
-
 import '../c/personnel_performance_controller.dart';
 class AddUpdatePersonnelPerformancePage extends StatefulWidget {
-  PerformanceResponse? response;
+  Performance? response;
 
   @override
   _PageState createState() => _PageState();
@@ -155,15 +152,17 @@ class _PageState extends StateMVC<AddUpdatePersonnelPerformancePage> {
                   map['position']=position.value.text.toString();
                   map['hkid']=hk_id.value.text.toString();
                   map['cwr']=cwr.value.text.toString();
-                  map['greenCard']=green_card.value.text.toString();
-                  map['cwrExpiryDate']=CWRExpiryDate;
-                  map['expiryDate']=GreenCardExpiryDate;
+                  map['green_card']=green_card.value.text.toString();
+                  map['cwr_expiry_date']=CWRExpiryDate;
+                  map['expiry_date']=GreenCardExpiryDate;
+                  map['project_id']=_con!.selectedProject!.id;
                   if(widget.response==null) {
                     _con!.addPerformance(map);
                   }else{
-                    _con!.updatePerformance(widget.response!.key, map);
+                    map['id']=widget.response!.id;
+                    _con!.updatePerformance(map);
                   }
-                  Navigator.pop(context);
+                  Navigator.pop(context,true);
                 }
               },),
               const SizedBox(height: 50,),

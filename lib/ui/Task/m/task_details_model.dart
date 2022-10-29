@@ -3,7 +3,7 @@ import 'dart:convert';
 class TaskDetailsModel {
   List<DetailsModel> qa_qc_package;
   SurfaceModel surface_preparation_package;
-  SoftcutApplicationModel shotcrete_application_package;
+    SoftcutApplicationModel shotcrete_application_package;
   MonitoringModel applied_monitoring_package;
   EquipmentCleaningModel completion_equipment_cleaning_package;
   ChemicalAddedModel chemical_added;
@@ -153,7 +153,7 @@ class SurfaceModel {
 
 class SoftcutApplicationModel {
   String equipment;
-  String name_id_nozzleman;
+  dynamic name_id_nozzleman;
   dynamic ambient_temperature;
   dynamic methods_used;
   dynamic location_sprayed;
@@ -288,8 +288,8 @@ class ChemicalAddedModel {
   dynamic hca;
 
   ChemicalAddedModel.fromJson(Map<String, dynamic> json)
-      : plaster_sizer = json["plaster_sizer"] ?? "0",
-        hca = json["hca"] ?? "0";
+      : plaster_sizer = json["plaster_sizer"] ?? "",
+        hca = json["hca"] ?? "";
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = Map();
@@ -304,8 +304,8 @@ class FiberAddedModel {
   dynamic duro;
 
   FiberAddedModel.fromJson(Map<String, dynamic> json)
-      : mono = json["mono"] ?? "0",
-        duro = json["duro"] ?? "0";
+      : mono = json["mono"] ?? "",
+        duro = json["duro"] ?? "";
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = Map();
