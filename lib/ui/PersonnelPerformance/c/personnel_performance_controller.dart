@@ -1,129 +1,147 @@
 import 'dart:convert';
-
-import 'package:firebase_database/firebase_database.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:scms/services/session_repo.dart';
+import '../../../Dios/api_dio.dart';
 import '../../../Utils/lock_overlay.dart';
-import '../../../services/project_model.dart';
+import '../../../Utils/tools.dart';
+import '../../../globle/m/basic_response.dart';
+import '../../../globle/m/error_response.dart';
+import '../../../globle/m/project_model.dart';
+import '../../../globle/m/user_details.dart';
+import '../../Task/m/task_details_model.dart';
+import '../../Task/m/task_response.dart';
 import '../m/performance_response.dart';
 
 class PersonnelPerformanceController extends ControllerMVC {
   GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
-  List<PerformanceResponse> taskList = [];
-  bool isLoading = true;
+  PerformanceResponse? performanceResponse;
   double totalVolume=0;
-  ProjectModel? selectedProject;
+  Project? selectedProject;
   String id="";
+  UserDetails? userDetails;
+  bool isLoading=true;
   PersonnelPerformanceController(){
     getSelectedProject().then((value){
       selectedProject=value;
       getValue();
     });
-  }
-
-  void getTask() {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('PersonallePerformance');
-    ref_projectdetails
-        .onValue
-        .listen((event) {
-      taskList.clear();
-      for (final element in event.snapshot.children) {
-        taskList.add(PerformanceResponse(key: element.key.toString(),
-            name: element.child("name").value.toString(),
-            position: element.child("position").value.toString(),
-            hkid: element.child("hkid").value.toString(),
-            cwr: element.child("cwr").value.toString(),
-            cwrExpiryDate: element.child("cwrExpiryDate").value.toString(),
-            greenCard: element.child("greenCard").value.toString(),
-            expiryDate: element.child("expiryDate").value.toString(),
-        ));
-      }
-      isLoading=false;
-      notifyListeners();
-    });
-
-  }
-  void deletePerformance(key) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('PersonallePerformance/$key');
-    ref_projectdetails.remove();
-
-  }
-  void addPerformance(val) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('PersonallePerformance/');
-    String key=ref_projectdetails.push().key.toString();
-    ref_projectdetails.child(key).update(val);
-
-  }
-  void updatePerformance(key,val) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('PersonallePerformance');
-    ref_projectdetails.child(key).set(val);
-
-  }
-  void getValue() {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('projectdetails/${selectedProject!.project}');
-    ref_projectdetails
-        .orderByChild('file_type')
-        .equalTo(2)
-        .onValue
-        .listen((event) {
-      for (final element in event.snapshot.children) {
-        dynamic shotcrete_application_package = element.child("shotcrete_application_package").value;
-        if (shotcrete_application_package) {
-          Map<String, dynamic> map_a = getValueJson(element);
-          if(map_a['shotcrete_application_package']!=null){
-          Map<String, dynamic> map = map_a['shotcrete_application_package'];
-          String nameID=map['name_id_nozzleman'].toString();
-          if(nameID==id && map['volume']!=null){
-            double volume = double.tryParse(map['volume'])??0;
-            totalVolume = totalVolume + volume;
-          }
-        }}
-      }
-      isLoading=false;
+    getUser().then((value){
+      userDetails=value;
       notifyListeners();
     });
   }
-  Map<String,dynamic>getValueJson(element){
-
-    try {
-      return jsonDecode(element.child("details").value.toString());
-    } catch (e, s) {
-      return {};
-    }
-
+  void PersonalPerformancesList() async {
+    _ListenerList().then((value){
+      performanceResponse=value;
+      LockOverlay().closeOverlay();
+      notifyListeners();
+    }).catchError(onError);
   }
-  void reset() {
+  void deletePerformance(Performance performance) async {
     LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('projectdetails/${selectedProject!.project}');
-    ref_projectdetails
-        .orderByChild('file_type')
-        .equalTo(2)
-        .onValue
-        .listen((event) {
-      for (final element in event.snapshot.children) {
-        String key = element.key.toString();
-        dynamic details = element.child("details").value;
-        dynamic shotcrete_application_package =
-            element.child("shotcrete_application_package").value;
-        if (shotcrete_application_package) {
-          Map<String, dynamic> map_a = getValueJson(element);
-          Map<String, dynamic> map = map_a['shotcrete_application_package']!=null?map_a['shotcrete_application_package']:Map();
-          String nameID=map['name_id_nozzleman_push_key']==null?"":map['name_id_nozzleman_push_key'].toString();
-          if(nameID==id){
-            map['volume'] = "0";
-          }
-          ref_projectdetails.child(key).child('details').set(map.toString());
-        }
-      }
-    });
+    _ListenerDelete(performance).then((value){
+      PersonalPerformancesList();
+    }).catchError(onError);
+  }
+
+  void addPerformance(Map<String,dynamic>map) async {
+    FocusScope.of(scaffoldKey.currentContext!).unfocus();
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerAdd(map).then((value){
+      Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+    }).catchError(onError);
+  }
+  void updatePerformance(Map<String,dynamic>map) async {
+    FocusScope.of(scaffoldKey.currentContext!).unfocus();
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerUpdate(map).then((value){
+      PersonalPerformancesList();
+    }).catchError(onError);
+  }
+  Future<BasicResponse>_ListenerAdd(Map<String,dynamic>map) async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).post("personal-performances",data: map);
+    return BasicResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerUpdate(Map<String,dynamic>map) async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).put("personal-performances/${map['id']}",data: map);
+    return BasicResponse.fromJson(response.data);
+  }
+  Future<PerformanceResponse>_ListenerList() async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).get("personal-performances");
+    return PerformanceResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerDelete(Performance performance) async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).delete("personal-performances/${performance.id}");
+    return BasicResponse.fromJson(response.data);
+  }
+  void onError(e){
+    if (e is DioError) {
+      ErrorResponse errorResponse=ErrorResponse.fromJson(e.response!.data);
+      Tools.ShowErrorMessage(Tools.navigatorKey.currentContext, errorResponse.message);
+    }
     LockOverlay().closeOverlay();
   }
 
+  void getValue() {
+    _ListenerTaskList().then((value){
+      if(value.status){
+        isLoading=false;
+        List<TaskList> taskList=value.list.where((element) => element.file_type=="2").toList();
+        taskList.forEach((element) {
+          if(element.shotcrete_application_package.toString()=="1"){
+            SoftcutApplicationModel shotcrete_application_package=element.details!.shotcrete_application_package;
+            if(shotcrete_application_package.name_id_nozzleman.toString()==id && shotcrete_application_package.volume!=null){
+              double volume = double.tryParse(shotcrete_application_package.volume)??0;
+              totalVolume = totalVolume + volume;
+            }
+          }
+        });
+        notifyListeners();
+      }
+    }).catchError(onError);
+
+  }
+
+  void reset() {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerTaskList().then((value){
+      if(value.status){
+        List<TaskList> taskList=value.list.where((element) => element.file_type=="2").toList();
+        taskList.forEach((element) {
+          if(element.shotcrete_application_package.toString()=="1"){
+            SoftcutApplicationModel shotcrete_application_package=element.details!.shotcrete_application_package;
+            if(shotcrete_application_package.name_id_nozzleman==id){
+              shotcrete_application_package.volume="0";
+              updateTask(element);
+            }
+          }
+        });
+        notifyListeners();
+      }
+    }).catchError(onError);
+
+  }
+  Future<TaskResponse>_ListenerTaskList() async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).get("project-details/${selectedProject!.id}");
+    return TaskResponse.fromJson(response.data);
+  }
+  void updateTask(TaskList data) {
+    Map<String,dynamic>map=Map();
+    map['details']=jsonEncode(data.details!.toMap());
+    map['file_type']=data.file_type;
+    _ListenerUpdateTask(map,data.id).then((value){
+    }).catchError(onError);
+  }
+  Future<BasicResponse>_ListenerUpdateTask(Map<String,dynamic>map,id) async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).put("project-details/${id}",data: map);
+    return BasicResponse.fromJson(response.data);
+  }
 }

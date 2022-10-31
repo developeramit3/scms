@@ -1,23 +1,24 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:open_file/open_file.dart';
+import 'package:scms/globle/m/user_details.dart';
+import '../../../Dios/api_dio.dart';
 import '../../../Utils/lock_overlay.dart';
-import '../../../services/project_model.dart';
+import '../../../Utils/tools.dart';
+import '../../../globle/m/basic_response.dart';
+import '../../../globle/m/project_model.dart';
 import '../../../services/session_repo.dart';
-import '../../Home/m/user_model.dart';
 import '../m/training_response.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 class TraningController extends ControllerMVC {
   GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
-  List<TrainingResponse>list=[];
-  ProjectModel? selectedProject;
+  List<Training>list=[];
+  Project? selectedProject;
   bool isLoading = true;
-  UserModel? user;
+  UserDetails? user;
   TraningController(){
     getUser().then((value) {
       user = value;
@@ -29,32 +30,41 @@ class TraningController extends ControllerMVC {
   }
 
   void getTraining(int type) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('Testings/${selectedProject!.project}');
-    ref_projectdetails.child(type==0?"modules":"exam")
-        .onValue
-        .listen((event) {
-      list.clear();
-      for (final element in event.snapshot.children) {
-        list.add(TrainingResponse(key: element.key.toString(),
-          file_name: element.child("file_name").value.toString(),
-          link: element.child("link").value.toString(),
-        ));
+    _ListenerGetTesting().then((value){
+      LockOverlay().closeOverlay();
+      if(value.status){
+        list=value.list.where((element) => element.type.toString()==type.toString()).toList();
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
       }
       isLoading=false;
       notifyListeners();
+    }).catchError((e){
+      LockOverlay().closeOverlay();
+      isLoading=false;
+      notifyListeners();
     });
-
   }
 
 
-  void deleteTraining(key) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('Testings/${selectedProject!.project}/$key');
-    ref_projectdetails.remove();
-
+  void deleteTraining(key,type) {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerDeleteTesting(key).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getTraining(type);
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError((e){
+      LockOverlay().closeOverlay();
+    });
   }
-  Future<void> downloadFile(TrainingResponse res_file) async {
+  Future<void> downloadFile(Training res_file) async {
+    if(res_file.link==null){
+      Tools.ShowErrorMessage(scaffoldKey.currentContext!, 'File not found');
+      return;
+    }
     LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
     var uri=Uri.parse(res_file.link);
     var data = await http.get(uri);
@@ -79,8 +89,6 @@ class TraningController extends ControllerMVC {
   Future<String?> _findLocalPath() async {
     var externalStorageDirPath;
     if (Platform.isAndroid) {
-      // final directory = await getExternalStorageDirectory();
-      // externalStorageDirPath = directory?.path;
       externalStorageDirPath = "storage/emulated/0/Download/";
     } else if (Platform.isIOS) {
       externalStorageDirPath = (await getApplicationDocumentsDirectory()).absolute.path;
@@ -89,20 +97,43 @@ class TraningController extends ControllerMVC {
   }
   Future<void> addFile(PlatformFile val,int type) async {
     LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
-    var ref = FirebaseStorage.instance.ref().child('Testings/${val.name}');
-    ref.putFile(File(val.path!)).asStream().listen((event) {
-      DatabaseReference ref_projectdetails =
-      FirebaseDatabase.instance.ref('Testings/${selectedProject!.project}/').child(type==0?"modules":"exam");
-      String key=ref_projectdetails.push().key.toString();
-      ref.getDownloadURL().then((value) {
+    PostImage(path: val.path, fileName: val.name, folder_path: "Testings").then((value){
+      if(value.status){
         Map<String,dynamic>map=Map();
-        map['link']=ref.getDownloadURL().toString();
+        map['link']=value.file_path;
         map['file_name']='${val.name}';
-        ref_projectdetails.child(key).update(map);
-      });
-
-      LockOverlay().closeOverlay();
+        map['type']='$type';
+        map['project_id']=selectedProject!.id;
+        addTexting(map,type);
+      }
     });
 
+
+  }
+  void addTexting(val,type) async {
+    _ListenerAddTesting(val).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getTraining(type);
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError((e){
+      LockOverlay().closeOverlay();
+    });
+  }
+  Future<TrainingResponse>_ListenerGetTesting() async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).get("trainings/${selectedProject!.id}");
+    return TrainingResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerAddTesting(Map<String,dynamic> map) async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).post("trainings",data: map);
+    return BasicResponse.fromJson(response.data);
+  }Future<BasicResponse>_ListenerDeleteTesting(id) async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).delete("trainings/$id");
+    return BasicResponse.fromJson(response.data);
   }
 }

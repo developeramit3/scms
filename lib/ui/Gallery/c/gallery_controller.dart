@@ -1,26 +1,28 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:open_file/open_file.dart';
+import 'package:scms/globle/m/user_details.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import '../../../Dios/api_dio.dart';
 import '../../../Utils/lock_overlay.dart';
-import '../../../services/project_model.dart';
+import '../../../Utils/tools.dart';
+import '../../../globle/m/basic_response.dart';
+import '../../../globle/m/error_response.dart';
+import '../../../globle/m/project_model.dart';
 import '../../../services/session_repo.dart';
-import '../../Home/m/user_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../../Trials/m/trials_response.dart';
 import '../m/gallery_response.dart';
 class GalleryController extends ControllerMVC {
   GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
-  List<GalleryResponse>list=[];
-  ProjectModel? selectedProject;
+  List<Gallery>list=[];
+  Project? selectedProject;
   bool isLoading = true;
-  UserModel? user;
+  UserDetails? user;
   XFile? image;
   GalleryController(){
     getUser().then((value) {
@@ -33,38 +35,50 @@ class GalleryController extends ControllerMVC {
   }
 
   void getGallery(int type) {
+    String filter=type==0?"photos":"videos";
     list.clear();
     isLoading=true;
     notifyListeners();
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('Gallery/${selectedProject!.project}');
-    ref_projectdetails.child(type==0?"photos":"videos")
-        .onValue
-        .listen((event) async {
-      list.clear();
-      for (final element in event.snapshot.children) {
-        String? fileName;
-        if(type==1) {
+    _ListenerGetGalleries().then((value){
+      LockOverlay().closeOverlay();
+      List<Gallery>temp=value.list.where((element) => element.type==filter).toList();
+      if(value.status){
+        temp.forEach((element) async {
+         String? fileName;
+         if(type==1) {
            fileName = await VideoThumbnail.thumbnailFile(
-            video: element.child("link").value.toString(),
-            thumbnailPath: (await getTemporaryDirectory()).path,
-            imageFormat: ImageFormat.WEBP,
-            maxHeight: 64, // specify the height of the thumbnail, let the width auto-scaled to keep the source aspect ratio
-            quality: 75,
-          );
-        }
-        list.add(GalleryResponse(key: element.key.toString(),
-          user_type: element.child("user_type").value.toString(),
-          link:element.child("link").value.toString(),
-            thumb: fileName
-        ));
+               video: element.link.toString(),
+               thumbnailPath: (await getTemporaryDirectory()).path,
+         imageFormat: ImageFormat.WEBP,
+         maxHeight: 64, // specify the height of the thumbnail, let the width auto-scaled to keep the source aspect ratio
+         quality: 75,
+         );
+       }
+         element.thumb=fileName;
+         list.add(element);
+       });
+        isLoading=false;
+        notifyListeners();
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
       }
+    }).catchError((e){
       isLoading=false;
       notifyListeners();
     });
 
   }
-
+  void addEGallery(val,type) async {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerAddGallery(val).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getGallery(type);
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError(onError);
+  }
 
 
   Future<String> prepareSaveDir() async {
@@ -90,33 +104,34 @@ class GalleryController extends ControllerMVC {
   Future<void> addFile({required String path,required String name, required int type}) async {
     String location=type==0?'photos':'videos';
     LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
-    var ref = FirebaseStorage.instance.ref().child('$location/${name}');
-    ref.putFile(File(path)).asStream().listen((event) {
-      DatabaseReference ref_projectdetails =
-      FirebaseDatabase.instance.ref('Gallery/${selectedProject!.project}/${location}/');
-      String key=ref_projectdetails.push().key.toString();
-      ref.getDownloadURL().then((value) {
-        Map<String,dynamic>map=Map();
-        map['link']=value.toString();
-        map['user_type']=user!.user_type;
-        ref_projectdetails.child(key).update(map);
-      });
-      LockOverlay().closeOverlay();
+    PostImage(path: path, fileName: name, folder_path: location).then((value){
+      if(value.status){
+        LockOverlay().closeOverlay();
+        Map<String,dynamic> map =Map();
+        map['type']=location;
+        map['project_id']=selectedProject!.id;
+        map['link']=value.file_path;
+        addEGallery(map, type);
+      }
     });
 
   }
-  Future<void> downloadFile(TrialsResponse res_file) async {
-    print('link==> ${res_file.link}');
-    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
-    var uri=Uri.parse(res_file.link);
-    var data = await http.get(uri);
-    final output = await prepareSaveDir();
-    final file = File('${output}/${res_file.filename}');
-    print('FilePath ${file.path}');
-    if(!file.existsSync()) {
-      await file.writeAsBytes(data.bodyBytes);
+
+  void onError(e){
+    if (e is DioError) {
+      ErrorResponse errorResponse=ErrorResponse.fromJson(e.response!.data['error']);
+      Tools.ShowErrorMessage(scaffoldKey.currentContext, errorResponse.message);
     }
     LockOverlay().closeOverlay();
-    OpenFile.open(file.path);
+  }
+  Future<GalleryResponse>_ListenerGetGalleries() async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).get("galleries/${selectedProject!.id}");
+    return GalleryResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerAddGallery(Map<String,dynamic> map) async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).post("galleries",data: map);
+    return BasicResponse.fromJson(response.data);
   }
 }

@@ -12,7 +12,7 @@ import '../c/personnel_performance_controller.dart';
 import '../m/performance_response.dart';
 
 class PerformanceDetailsPage extends StatefulWidget {
-  PerformanceResponse response;
+  Performance response;
 
   @override
   _PageState createState() => _PageState();
@@ -30,7 +30,7 @@ class _PageState extends StateMVC<PerformanceDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _con!.id = widget.response.key;
+    _con!.id = widget.response.id.toString();
   }
 
   @override
@@ -38,31 +38,22 @@ class _PageState extends StateMVC<PerformanceDetailsPage> {
     return Scaffold(
       key: _con!.scaffoldKey,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ),
       persistentFooterButtons: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ChipWidget(
               'UPDATE',
-              width: 100,
+              width: 150,
               onTap: () {
-                Navigator.pushNamed(context, '/update_personnel_performance', arguments: widget.response);
+                Navigator.pushNamed(context, '/update_personnel_performance', arguments: widget.response).then((value){
+                  Navigator.pop(context);
+                });
               },
             ),
             ChipWidget(
               'RESET',
-              width: 100,
+              width: 150,
               onTap: () {
                 _con!.reset();
               },
@@ -189,7 +180,7 @@ class _PageState extends StateMVC<PerformanceDetailsPage> {
                     Expanded(
                       flex: 1,
                       child: SubTxtWidget(
-                        '${widget.response.cwrExpiryDate}',
+                        Tools.changeDate(widget.response.cwrExpiryDate,"dd-MM-yyyy"),
                         color: ThemeColor.colorbtnPrimary,
                         textAlign: TextAlign.center,
                       ),
@@ -205,7 +196,7 @@ class _PageState extends StateMVC<PerformanceDetailsPage> {
                     Expanded(
                       flex: 1,
                       child: SubTxtWidget(
-                        '${widget.response.expiryDate}',
+                        Tools.changeDate(widget.response.expiryDate,"dd-MM-yyyy"),
                         color: ThemeColor.colorbtnPrimary,
                         textAlign: TextAlign.center,
                       ),

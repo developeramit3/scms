@@ -1,31 +1,33 @@
-import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
-
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
+import 'package:scms/globle/m/user_details.dart';
 import 'package:scms/ui/Equipment/m/shedule_response.dart';
+import '../../../Dios/api_dio.dart';
 import '../../../Utils/lock_overlay.dart';
-import '../../../services/project_model.dart';
+import '../../../Utils/tools.dart';
+import '../../../globle/m/basic_response.dart';
+import '../../../globle/m/error_response.dart';
+import '../../../globle/m/project_model.dart';
 import '../../../services/session_repo.dart';
-import '../../Home/m/user_model.dart';
+import '../../Task/m/task_details_model.dart';
+import '../../Task/m/task_response.dart';
 import '../m/delay_date.dart';
 import '../m/equipment_response.dart';
 class EquipmentController extends ControllerMVC {
   GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
-  ProjectModel? selectedProject;
+  Project? selectedProject;
   bool isLoading = true;
   bool isDelayLoading = true;
-  UserModel? user;
-  List<EquipmentResponse>list=[];
+  UserDetails? user;
+  EquipmentResponse? equipmentResponse;
   List<DelayDate>delay_list=[];
   List<DelayDate>performance_list=[];
   List<DelayDate>breackdown_list=[];
-  List<SheduleResponse>schedule_list=[];
+  List<Shedule>schedule_list=[];
   final DateFormat formatter = DateFormat('yyyy-MM-dd');
   List<EquipmentBarchatDate>eq_list=[];
   EquipmentController(){
@@ -34,244 +36,312 @@ class EquipmentController extends ControllerMVC {
     });
     getSelectedProject().then((value){
       selectedProject=value;
-
+      getEquipment();
     });
   }
-
-
-  void getEquipment() {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('EquipmentPerformance');
-    ref_projectdetails.onValue.listen((event) {
-      list.clear();
-      for (final element in event.snapshot.children) {
-        list.add(EquipmentResponse(key: element.key.toString(),
-            name: element.child("name").value.toString()));
+//=============================
+  void addEquipment(val) async {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerAddEquipment(val).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getEquipment();
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
       }
-      getDelayDate();
-      isLoading=false;
-      notifyListeners();
-    });
-
+    }).catchError(onError);
   }
+  void deleteEquipment(val) async {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerDeleteEquipment(val).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getEquipment();
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError(onError);
+  }
+  void updateEquipment(id,val) async {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerUpdateEquipment(id,val).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getEquipment();
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError(onError);
+  }
+  void getEquipment() async {
+    _ListenerGetEquipment().then((value){
+      LockOverlay().closeOverlay();
+      if(value.status){
+        equipmentResponse=value;
+        notifyListeners();
+       getDelayDate();
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError(onError);
+  }
+
+  Future<BasicResponse>_ListenerAddEquipment(val) async {
+    Map<String,dynamic> map=Map();
+    map["user_id"]=user!.user_id.toString();
+    map["name"]=val;
+    var response =
+    await httpClientWithHeaderToken(user!.token).post("equiment-performances",data: map);
+    return BasicResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerUpdateEquipment(id,val) async {
+    Map<String,dynamic> map=Map();
+    map["name"]=val;
+    var response =
+    await httpClientWithHeaderToken(user!.token).put("equiment-performances/$id",data: map);
+    return BasicResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerDeleteEquipment(val) async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).delete("equiment-performances/$val");
+    return BasicResponse.fromJson(response.data);
+  }
+  Future<EquipmentResponse>_ListenerGetEquipment() async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).get("equiment-performances");
+    return EquipmentResponse.fromJson(response.data);
+  }
+  void onError(e){
+    if (e is DioError) {
+      ErrorResponse errorResponse=ErrorResponse.fromJson(e.response!.data['error']);
+      Tools.ShowErrorMessage(scaffoldKey.currentContext, errorResponse.message);
+    }
+    LockOverlay().closeOverlay();
+  }
+//=============================
+
+
   void getDelayDate() {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('projectdetails/${selectedProject!.project}');
-    ref_projectdetails.orderByChild('file_type').equalTo(2)
-        .onValue.listen((event) {
-      delay_list.clear();
-      List<DateTime>date=[];
-      for (final element in event.snapshot.children) {
-        dynamic shotcrete_application_package = element.child("shotcrete_application_package").value;
-        if (shotcrete_application_package) {
-          Map<String, dynamic> map_a = getValue(element);
-          if(map_a['shotcrete_application_package']!=null){
-            Map<String, dynamic> map = map_a['shotcrete_application_package'];
-            print(map);
-            if(map['euipment_performance_push_key']!=null&&map['euipment_performance_date']!=null&&map['euipment_performance_date'].toString().isNotEmpty){
-              if(map['volume']!=null){
-                delay_list.add(DelayDate.fromJson(map));
-                date.add(formatter.parse(map['euipment_performance_date']));
+    _ListenerTaskList().then((value){
+      if(value.status){
+        delay_list.clear();
+        List<DateTime>date=[];
+       List<TaskList> taskList=value.list.where((element) => element.file_type=="2").toList();
+       taskList.forEach((element) {
+         if(element.shotcrete_application_package.toString()=="1"){
+           if(element.details!.shotcrete_application_package.euipment_performance_push_key!=null&&element.details!.shotcrete_application_package.euipment_performance_date!=null){
+             delay_list.add(DelayDate.fromJson(element.details!.shotcrete_application_package.toMap()));
+             date.add(formatter.parse(element.details!.shotcrete_application_package.euipment_performance_date));
+           }
+         }
+       });
+        date.sort((a, b) => a.compareTo(b));
+        date.forEach((da) {
+          int index = 0;
+          EquipmentBarchatDate barchatDate=EquipmentBarchatDate();
+          equipmentResponse!.list.forEach((eleme) {
+            DelayDate getDelayDate = getDelayDateFliter(formatter.format(da), eleme.id, delay_list);
+            if(getDelayDate.volume!=0){
+              barchatDate.date=getDelayDate.euipment_performance_date;
+              if(index==0){
+                barchatDate.name1=eleme.name;
+                barchatDate.delay1=getDelayDate.volume;
+              }if(index==1){
+                barchatDate.name2=eleme.name;
+                barchatDate.delay2=getDelayDate.volume;
+              }if(index==2){
+                barchatDate.name3=eleme.name;
+                barchatDate.delay3=getDelayDate.volume;
+              }if(index==3){
+                barchatDate.name4=eleme.name;
+                barchatDate.delay4=getDelayDate.volume;
+              }if(index==4){
+                barchatDate.name5=eleme.name;
+                barchatDate.delay5=getDelayDate.volume;
               }
             }
-          }
-        }
-      }
-      date.toSet().toList().forEach((da) {
-        int index = 0;
-        EquipmentBarchatDate barchatDate=EquipmentBarchatDate();
-        list.forEach((eleme) {
-          String push_key = eleme.key;
-          DelayDate getDelayDate = getDelayDateFliter(formatter.format(da), push_key, delay_list);
-          if(getDelayDate.volume!=0){
-            print("getDelayDate.euipment_performance_date ${getDelayDate.euipment_performance_date}");
-            barchatDate.date=getDelayDate.euipment_performance_date;
-            if(index==0){
-              barchatDate.name1=eleme.name;
-              barchatDate.delay1=getDelayDate.volume;
-            }if(index==1){
-              barchatDate.name2=eleme.name;
-              barchatDate.delay2=getDelayDate.volume;
-            }if(index==2){
-              barchatDate.name3=eleme.name;
-              barchatDate.delay3=getDelayDate.volume;
-            }if(index==3){
-              barchatDate.name4=eleme.name;
-              barchatDate.delay4=getDelayDate.volume;
-            }if(index==4){
-              barchatDate.name5=eleme.name;
-              barchatDate.delay5=getDelayDate.volume;
-            }
-          }
-          index = index + 1;
+            index = index + 1;
+          });
+          eq_list.add(barchatDate);
+
         });
-        eq_list.add(barchatDate);
+        isDelayLoading=false;
+        notifyListeners();
+      }
+    }).catchError(onError);
 
-      });
-      isDelayLoading=false;
-      notifyListeners();
-    });
   }
-
+  Future<TaskResponse>_ListenerTaskList() async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).get("project-details/${selectedProject!.id}");
+    return TaskResponse.fromJson(response.data);
+  }
   DelayDate getDelayDateFliter(date,push,List<DelayDate>list){
     Map<String,dynamic>map=Map();
     map['volume']="0";
     map['equipment_number_of_hours']="0";
     DelayDate tem =DelayDate.fromJson(map);
     list.forEach((element) {
-      print('MatchKey== ${element.euipment_performance_push_key} push $push volume ${element.volume}');
-      print('MatchKey== ${element.euipment_performance_date} date $date volume ${element.volume}');
       if(element.euipment_performance_push_key==push&&element.euipment_performance_date==date){
         tem=element;
       }
     });
     return tem;
   }
-  void getDelayDateSingle(EquipmentResponse response) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('projectdetails/${selectedProject!.project}');
-    ref_projectdetails.orderByChild('file_type').equalTo(2)
-        .onValue.listen((event) {
-      performance_list.clear();
-      breackdown_list.clear();
-      for (final element in event.snapshot.children) {
-        dynamic shotcrete_application_package = element.child("shotcrete_application_package").value;
-        if (shotcrete_application_package) {
-          Map<String, dynamic> map_a = getValue(element);
-          if(map_a['shotcrete_application_package']!=null){
-            Map<String, dynamic> map = map_a['shotcrete_application_package'];
-            if(map['euipment_performance_push_key']!=null&&map['euipment_performance_date']!=null){
-              if(map['euipment_performance_push_key']==response.key){
-                if(map['euipment_performance_date'].toString().isNotEmpty){
-                  if(map['volume']!=null&&map['volume'].toString().isNotEmpty){
-                    performance_list.add(DelayDate.fromJson(map));
-                  }
-                  if(map['equipment_number_of_hours']!=null&&map['equipment_number_of_hours'].toString().isNotEmpty){
-                    breackdown_list.add(DelayDate.fromJson(map));
-                  }
-                  }
-            }
+  void getDelayDateSingle(Equipment response) {
+    _ListenerTaskList().then((value){
+      if(value.status){
+        performance_list.clear();
+        breackdown_list.clear();
+        List<TaskList> taskList=value.list.where((element) => element.file_type=="2").toList();
+        taskList.forEach((element) {
+          if(element.shotcrete_application_package.toString()=="1"){
+            SoftcutApplicationModel shotcrete_application_package=element.details!.shotcrete_application_package;
+            print("come===1");
+            if(shotcrete_application_package.euipment_performance_push_key!=null&&shotcrete_application_package.euipment_performance_date!=null){
+              print("come===2 ${shotcrete_application_package.euipment_performance_push_key}===${response.id}");
+              if(shotcrete_application_package.euipment_performance_push_key==response.id){
+                print("come===3");
+                if(shotcrete_application_package.euipment_performance_date.toString().isNotEmpty){
+                 print("come===4");
+                 if(shotcrete_application_package.volume!=null&&shotcrete_application_package.volume.toString().isNotEmpty){
+                   print("come===5");
+                   performance_list.add(DelayDate.fromJson(shotcrete_application_package.toMap()));
+                 }
+                 if(shotcrete_application_package.equipment_number_of_hours!=null&&shotcrete_application_package.equipment_number_of_hours.toString().isNotEmpty){
+                   breackdown_list.add(DelayDate.fromJson(shotcrete_application_package.toMap()));
+                 }
+               }
+             }
+
             }
           }
-        }
+        });
+        performance_list.sort((a, b) => formatter.parse(a.euipment_performance_date).compareTo(formatter.parse(b.euipment_performance_date)));
+        breackdown_list.sort((a, b) => formatter.parse(a.euipment_performance_date).compareTo(formatter.parse(b.euipment_performance_date)));
+        isDelayLoading=false;
+        notifyListeners();
       }
-      performance_list.sort((a, b) => formatter.parse(a.euipment_performance_date).compareTo(formatter.parse(b.euipment_performance_date)));
-      breackdown_list.sort((a, b) => formatter.parse(a.euipment_performance_date).compareTo(formatter.parse(b.euipment_performance_date)));
-      isDelayLoading=false;
-      notifyListeners();
-    });
+    }).catchError(onError);
+
 
   }
-  Map<String,dynamic>getValue(element){
-    try {
-      return jsonDecode(element.child("details").value.toString());
-    } catch (e, s) {
-      return {};
-    }
 
-  }
-  void addEquipment(val) {
-    Map<String,dynamic>map=Map();
-    map['name']=val;
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('EquipmentPerformance');
-    String key=ref_projectdetails.push().key.toString();
-    ref_projectdetails.child(key).update(map);
 
-  }
-  void updateEquipment(key,val) {
-    Map<String,dynamic>map=Map();
-    map['name']=val;
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('EquipmentPerformance');
-    ref_projectdetails.child(key).set(map);
-
-  }
-  void deleteEquipment(key) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('EquipmentPerformance').child(key);
-    ref_projectdetails.remove();
-    notifyListeners();
-
-  }
   void deleteSchedule(type,key) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('ScheduleMaintenance/${selectedProject!.project}').child(key);
-    ref_projectdetails.child(type==0?"Schedule":type==1?"Completed":"Reports").child(key).remove();
-    notifyListeners();
-
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerDeleteShedule(key).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getShedule(type);
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError(onError);
   }
 
-  void getShedule(int type) {
+  void getShedule(String type) {
     isLoading=true;
     notifyListeners();
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('ScheduleMaintenance/${selectedProject!.project}');
-    ref_projectdetails.child(type==0?"Schedule":type==1?"Completed":"Reports")
-        .onValue
-        .listen((event) {
-      schedule_list.clear();
-      for (final element in event.snapshot.children) {
-        schedule_list.add(SheduleResponse(key: element.key.toString(),
-          start_date: element.child("start_date").value.toString(),
-          end_date: element.child("end_date").value.toString(),
-          details: element.child("details").value.toString(),
-        ));
+    _ListenerGetShedule().then((value){
+      LockOverlay().closeOverlay();
+      if(value.status){
+        schedule_list=value.list.where((element) => element.type.toString()==type.toString()).toList();
+        isLoading=false;
+        notifyListeners();
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
       }
-      isLoading=false;
-      notifyListeners();
-    });
+    }).catchError(onError);
+    
 
   }
-  Future<void> addFile(EquipmentResponse response,PlatformFile val) async {
+  Future<void> addFile(Equipment eqq,PlatformFile val) async {
     LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
-    var ref = FirebaseStorage.instance.ref().child('Reports/${val.name}');
-    ref.putFile(File(val.path!)).asStream().listen((event) {
-      DatabaseReference ref_projectdetails =
-      FirebaseDatabase.instance.ref('ScheduleMaintenance/${selectedProject!.project}/').child(response.key);
-      String key=ref_projectdetails.push().key.toString();
-      ref.getDownloadURL().then((value) {
+    PostImage(path: val.path,fileName: val.name,folder_path: "Reports").then((value){
+      if(value.status){
+        LockOverlay().closeOverlay();
         Map<String,dynamic>map=Map();
         map['link']=value.toString();
         map['file_name']='${val.name}';
-        ref_projectdetails.child(key).update(map);
-      });
-      LockOverlay().closeOverlay();
+        addSchedule(map);
+      }
     });
-
   }
-  void resetSchedule(EquipmentResponse response) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('projectdetails/${selectedProject!.project}');
-    ref_projectdetails.orderByChild('file_type').equalTo(2).onValue.listen((event) {
-      for (final element in event.snapshot.children) {
-        dynamic shotcrete_application_package = element.child("shotcrete_application_package").value;
-        if (shotcrete_application_package) {
-          Map<String, dynamic> map_a = getValue(element);
-          if(map_a['shotcrete_application_package']!=null){
-            Map<String, dynamic> map = map_a['shotcrete_application_package'];
-            if(map['euipment_performance_push_key']!=null&&map['euipment_performance_date']!=null){
-              if(map['euipment_performance_push_key']==response.key){
-                map_a['shotcrete_application_package']['euipment_performance_date']="";
-                map_a['shotcrete_application_package']['equipment_number_of_hours']="";
-                DatabaseReference projectdetails =
-                FirebaseDatabase.instance.ref('projectdetails/${selectedProject!.project}').child(element.key.toString());
-                projectdetails.child('details').set(map_a);
+  void resetSchedule(Equipment response) {
+    _ListenerTaskList().then((value){
+      if(value.status){
+        List<TaskList> taskList=value.list.where((element) => element.file_type=="2").toList();
+        taskList.forEach((element) {
+          if(element.shotcrete_application_package.toString()=="1"){
+            SoftcutApplicationModel shotcrete_application_package=element.details!.shotcrete_application_package;
+            if(shotcrete_application_package.euipment_performance_push_key!=null&&shotcrete_application_package.euipment_performance_date!=null){
+              if(shotcrete_application_package.euipment_performance_push_key==response.id){
+                shotcrete_application_package.euipment_performance_date="";
+                shotcrete_application_package.equipment_number_of_hours="";
+                updateTask(element);
               }
             }
           }
-        }
+        });
+        isDelayLoading=false;
+        notifyListeners();
       }
-    });
+    }).catchError(onError);
     notifyListeners();
   }
-  void addSchedule(type,val) {
-    DatabaseReference ref_projectdetails =
-    FirebaseDatabase.instance.ref('ScheduleMaintenance/${selectedProject!.project}/')
-        .child(type);
-    String key=ref_projectdetails.push().key.toString();
-    ref_projectdetails.child(key).update(val);
+  void updateTask(TaskList task) {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerUpdateTask(task).then((value){
+      LockOverlay().closeOverlay();
+    }).catchError(onError);
+  }
+  Future<BasicResponse>_ListenerUpdateTask(TaskList task) async {
+    Map<String,dynamic>map=Map();
+    map['details']=jsonEncode(task.details!.toMap());
+    map['file_type']=1;
+    var response =
+    await httpClientWithHeaderToken(await getToken()).put("project-details/${task.id}",data: map);
+    return BasicResponse.fromJson(response.data);
+  }
 
+  void addSchedule(val) {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerAddShedule(val).then((value){
+      if(value.status){
+        Tools.ShowSuccessMessage(scaffoldKey.currentContext!, value.message);
+        getShedule(val['type']);
+      }else{
+        Tools.ShowErrorMessage(scaffoldKey.currentContext!, value.message);
+      }
+    }).catchError(onError);
+  }
+  void updateSchedule(Shedule qq) {
+    LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
+    _ListenerUpdateShedule(qq).then((value){
+      LockOverlay().closeOverlay();
+    }).catchError(onError);
+  }
+  Future<BasicResponse>_ListenerAddShedule(val) async {
+    val["project_id"]=selectedProject!.id;
+    var response =
+    await httpClientWithHeaderToken(user!.token).post("schedule-maintenance",data: val);
+    return BasicResponse.fromJson(response.data);
+  }
+  Future<SheduleResponse>_ListenerGetShedule() async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).get("schedule-maintenance/${selectedProject!.id}");
+    return SheduleResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerDeleteShedule(val) async {
+    var response =
+    await httpClientWithHeaderToken(user!.token).delete("schedule-maintenance/$val");
+    return BasicResponse.fromJson(response.data);
+  }
+  Future<BasicResponse>_ListenerUpdateShedule(Shedule qq) async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).put("schedule-maintenance/${qq.id}",data: qq.toJson());
+    return BasicResponse.fromJson(response.data);
   }
 }
 class EquipmentBarchatDate{

@@ -19,7 +19,7 @@ ChipWidget(this.title,{this.fontSize=16,this.onTap,this.leading,this.color,this.
     return InkWell(
       onTap: onTap,
       child: Container(
-        width: width??wid,
+        width: 100,
         padding: EdgeInsets.symmetric(horizontal: 5,vertical: 12),
         margin:const EdgeInsets.symmetric(vertical: 5,horizontal: 5),
         decoration: BoxDecoration(

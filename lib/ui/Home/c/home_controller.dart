@@ -1,90 +1,88 @@
 import 'dart:convert';
-import 'dart:ffi';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
+import 'package:scms/globle/m/user_details.dart';
 import 'package:scms/services/session_repo.dart';
-import 'package:scms/ui/Home/m/user_model.dart';
+import '../../../Dios/api_dio.dart';
 import '../../../Utils/lock_overlay.dart';
 import '../../../Utils/tools.dart';
-import '../../../generated/l10n.dart';
-import '../../../services/project_model.dart';
+import '../../../globle/m/basic_response.dart';
+import '../../../globle/m/error_response.dart';
+import '../../../globle/m/project_model.dart';
+import '../../Task/m/task_details_model.dart';
+import '../../Task/m/task_response.dart';
 import '../m/delay_response.dart';
-import '../m/project_response.dart';
 
 class HomeController extends ControllerMVC {
   GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
-  ProjectResponse? projectResponse;
-  List<DelayResponse> delayList = [];
-  UserModel? user;
-  ProjectModel? model;
-  String selectedProject="";
+  DelayResponse? delayResponse;
+  UserDetails? user;
+  Project? projectResponse;
   double dump_volume=0;
   HomeController() {
     getUser().then((value) {
       user = value;
     });
     getSelectedProject().then((value){
-      model=value;
+      projectResponse=value;
+      getDelay();
+      notifyListeners();
     });
   }
-
-  bool isLoading = true;
-  bool isLoadingDelay = true;
 
   void getProjectDetails() {
-    DatabaseReference ref = FirebaseDatabase.instance.ref('project/$selectedProject');
-    ref.onValue.listen((DatabaseEvent event) {
-      isLoading = false;
-      projectResponse = ProjectResponse(
-        volume: event.snapshot.child("volume").value,
-        start_day: event.snapshot.child("start_day").value,
-        volume_complete_day: event.snapshot.child("volume_complete_day").value,
-      );
+    _ListenerList().then((value){
+      projectResponse=value;
       notifyListeners();
     });
   }
-
+  Future<Project>_ListenerList() async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).get("projects/${projectResponse!.id}");
+    return Project.fromJson(response.data['data']);
+  }
   void getDelay() {
-    delayList.clear();
-    DatabaseReference ref = FirebaseDatabase.instance.ref('Delay/$selectedProject');
-    ref.onValue.listen((event) {
-      for (final element in event.snapshot.children) {
-        delayList.add(DelayResponse(
-          delay: int.parse(element.child('delay').value.toString()),
-          delay_date: Tools.changeDateFormat(
-              element.child("delay_date").value.toString()),
-        ));
-      }
-      isLoadingDelay=false;
+    _ListenerDelay().then((value){
+      delayResponse=value;
       notifyListeners();
-    }, onError: (error) {
-      isLoadingDelay=false;
+    }).catchError((e){
+      delayResponse=DelayResponse.fromJson({});
       notifyListeners();
-      print(error);
     });
   }
-
+  Future<DelayResponse>_ListenerDelay() async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).get("delays/${projectResponse!.id}");
+    return DelayResponse.fromJson(response.data);
+  }
   void postValDay(String val) {
     projectResponse!.volume_complete_day = val;
-    DatabaseReference ref = FirebaseDatabase.instance.ref('project/$selectedProject');
-    ref.set(projectResponse!.toMap());
+    _ListenerUpdateProject(projectResponse!).then((value){
+      getProjectDetails();
+    });
   }
-
+  void updateProject() {
+    _ListenerUpdateProject(projectResponse!).then((value){
+      getProjectDetails();
+    });
+  }
+  Future<BasicResponse>_ListenerUpdateProject(Project project) async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).put("projects/${project.id}",data: project.toMap());
+    return BasicResponse.fromJson(response.data);
+  }
   void reset() {
     LockOverlay().showClassicLoadingOverlay(scaffoldKey.currentContext);
     projectResponse!.volume_complete_day = "0";
     projectResponse!.volume = "0";
     projectResponse!.start_day = Tools.getCurrentDate();
-    DatabaseReference ref = FirebaseDatabase.instance.ref('project/$selectedProject');
+    updateProject();
+   /*
     DatabaseReference ref_Delay =
-        FirebaseDatabase.instance.ref('Delay/$selectedProject');
+        FirebaseDatabase.instance.ref('Delay/selectedProject');
     DatabaseReference ref_projectdetails =
-        FirebaseDatabase.instance.ref('projectdetails/$selectedProject');
-    ref.set(projectResponse!.toMap());
+        FirebaseDatabase.instance.ref('projectdetails/selectedProject');
     ref_Delay.remove();
     getDelay();
     dump_volume=0;
@@ -107,39 +105,34 @@ class HomeController extends ControllerMVC {
 
         }
       }
-    });
-    LockOverlay().closeOverlay();
+    });*/
   }
   void getDumvalue() {
     dump_volume=0;
-    DatabaseReference ref_projectdetails =
-        FirebaseDatabase.instance.ref('projectdetails/$selectedProject');
-    ref_projectdetails
-        .orderByChild('file_type')
-        .equalTo(2)
-        .onValue
-        .listen((event) {
-      for (final element in event.snapshot.children) {
-        dynamic shotcrete_application_package = element.child("shotcrete_application_package").value;
-        if (shotcrete_application_package) {
-          Map<String, dynamic> map_a = getValue(element);
-          if(map_a['shotcrete_application_package']!=null){
-            Map<String, dynamic> map = map_a['shotcrete_application_package'];
-            if(map['dump_volume']!=null){
-              double volume = double.tryParse(map['dump_volume'])??0;
-              dump_volume = dump_volume + volume;
-            }
+    _ListenerProjectDetailsList().then((value){
+      List<TaskList>list=value.list.where((element) => element.file_type=="2").toList();
+      list.forEach((element) {
+        if(element.shotcrete_application_package.toString()=="1"&&element.details!=null){
+          SoftcutApplicationModel short= element.details!.shotcrete_application_package;
+          if(short.dump_volume!=null){
+            double volume = double.tryParse(short.dump_volume)??0;
+            dump_volume = dump_volume + volume;
           }
         }
-      }
-    });
+      });
+    }).catchError(onError);
   }
-  Map<String,dynamic>getValue(element){
-    try {
-      return jsonDecode(element.child("details").value.toString());
-    } catch (e, s) {
-      return {};
-    }
+  Future<TaskResponse>_ListenerProjectDetailsList() async {
+    var response =
+    await httpClientWithHeaderToken(await getToken()).get("project-details/${projectResponse!.id}");
+    return TaskResponse.fromJson(response.data);
+  }
 
+  void onError(e){
+    if (e is DioError) {
+      ErrorResponse errorResponse=ErrorResponse.fromJson(e.response!.data);
+      Tools.ShowErrorMessage(scaffoldKey.currentContext, errorResponse.message);
+    }
+    LockOverlay().closeOverlay();
   }
 }

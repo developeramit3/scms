@@ -17,7 +17,7 @@ typedef callback = Function(Map<String,dynamic> val);
 class AddTaskDailogWidget extends StatelessWidget {
   callback? listener;
   String? error;
-  TaskResponse? model=TaskResponse();
+  TaskList? model=TaskList();
   Map<String,dynamic>map=Map();
   Map<String,dynamic>temp_map=Map();
   var name = TextEditingController();
@@ -31,7 +31,7 @@ class AddTaskDailogWidget extends StatelessWidget {
     map['qa_qc_package_04']=false;
     map['chemical_added']=false;
     map['surface_preparation_package']=false;
-    map['shotcrete_application_package']=false;
+    map['shortcreate_application_package']=false;
     map['applied_monitoring_package']=false;
     map['completion_equipment_cleaning_package']=false;
     map['attachment_link']=false;
@@ -205,9 +205,9 @@ class AddTaskDailogWidget extends StatelessWidget {
                           ),
                           Row(
                             children: [
-                              Checkbox(value: map['shotcrete_application_package'], onChanged:(v){
+                              Checkbox(value: map['shortcreate_application_package'], onChanged:(v){
                                 setState((){
-                                  map['shotcrete_application_package']=v;
+                                  map['shortcreate_application_package']=v;
                                 });
                               }),
                               SubTxtWidget('Shotcrete Application Package'),

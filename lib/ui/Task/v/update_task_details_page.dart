@@ -1,8 +1,10 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:scms/Utils/theme_color.dart';
+import 'package:scms/ui/Task/c/save_file_mobile.dart';
 import 'package:scms/widgets/header_txt_widget.dart';
 import 'package:scms/widgets/input_widget.dart';
 import 'package:scms/widgets/sub_txt_widget.dart';
@@ -15,7 +17,7 @@ import '../m/task_details_model.dart';
 import '../m/task_response.dart';
 
 class UpdateTaskDetailsPage extends StatefulWidget {
-  TaskResponse response;
+  TaskList response;
 
   @override
   _PageState createState() => _PageState();
@@ -85,41 +87,41 @@ class _PageState extends StateMVC<UpdateTaskDetailsPage> {
                 child: _ShotcreteSurfacePreparationPackage(),
                 visible:
                     widget.response.surface_preparation_package.toString() ==
-                        "true",
+                        "1",
               ),
               Visibility(
                 child: _ApplicationPackage(),
                 visible:
                     widget.response.shotcrete_application_package.toString() ==
-                        "true",
+                        "1",
               ),
               Visibility(
                 child: _MonitoringPackage(),
                 visible:
                     widget.response.applied_monitoring_package.toString() ==
-                        "true",
+                        "1",
               ),
               Visibility(
                 child: _CompletationPackage(),
                 visible: widget.response.completion_equipment_cleaning_package
                         .toString() ==
-                    "true",
+                    "1",
               ),
               Visibility(
                 child: _ChemicalAdded(),
-                visible: widget.response.chemical_added.toString() == "true",
+                visible: widget.response.chemical_added.toString() == "1",
               ),
               Visibility(
                 child: _fiberAdd(),
-                visible: widget.response.fiber_added.toString() == "true",
+                visible: widget.response.fiber_added.toString() == "1",
               ),
               Visibility(
                 child: _Attachment(),
-                visible: widget.response.attachment_link.toString() == "true",
+                visible: widget.response.attachment_link.toString() == "1",
               ),
               Visibility(
                 child: _Signature(),
-                visible: widget.response.signature.toString() == "true",
+                visible: widget.response.signature.toString() == "1",
               ),
               const SizedBox(
                 height: 50,
@@ -152,7 +154,7 @@ class _PageState extends StateMVC<UpdateTaskDetailsPage> {
                   if(widget.response.details!.qa_qc_package.length==0){
                     widget.response.details!.qa_qc_package.addAll(widget.response.qa_qc_package_object!);
                   }
-                  _con!.saveTask(widget.response, widget.response.details!.toMap());
+                  _con!.saveTask(widget.response);
                   Navigator.pop(context,1);
                 },
               ),
@@ -414,12 +416,12 @@ class _PageState extends StateMVC<UpdateTaskDetailsPage> {
       }
     }
     if(_con!.NameIDofNozzlemanList.isNotEmpty){
-      if(model.name_id_nozzleman.isEmpty){
+      if(model.name_id_nozzleman.toString().isEmpty){
         model.name_id_nozzleman=_con!.NameIDofNozzlemanList.first.value;
       }
     }
     if(TimeCompletion.value.text.isEmpty){
-      TimeCompletion.text=model.accelerator;
+      TimeCompletion.text=(double.parse(model.accelerator.toString())/0.5723).toStringAsFixed(0);
     }
       return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,10 +596,12 @@ class _PageState extends StateMVC<UpdateTaskDetailsPage> {
                 color: Colors.white,
                 inputType: TextInputType.number,
                 onChanged: (v) {
-                  setState(() {
-                    model.accelerator=TimeCompletion.value.text.toString();
-                  });
-                },
+                  if(TimeCompletion.value.text.isNotEmpty) {
+                    setState(() {
+                      model.accelerator = (double.parse(TimeCompletion.value
+                          .text.toString()) * 0.5723).toStringAsFixed(2);
+                    });
+                  } },
               ),
             ),
             const SizedBox(
@@ -616,8 +620,7 @@ class _PageState extends StateMVC<UpdateTaskDetailsPage> {
                     border: Border.all(color: ThemeColor.colorPrimary)),
                 child: SubTxtWidget(TimeCompletion.value.text.toString().isEmpty
                     ? "0.0"
-                    : double.parse(TimeCompletion.value.text.toString())
-                        .toStringAsFixed(1)),
+                    : model.accelerator),
               ),
             ),
             const SizedBox(
@@ -973,7 +976,9 @@ class _PageState extends StateMVC<UpdateTaskDetailsPage> {
               fontSize: 12,
               onTap: () async {
               var image= await _controller.toPngBytes();
-                _con!.addSignature(image).then((value){
+              String fileName="sginature";
+             String file= await FileSaver.instance.saveFile(fileName, image!, "png", mimeType: MimeType.PNG);
+              _con!.addSignature(file,fileName).then((value){
                   setState(() {
                     widget.response.attachment_link=value;
                     widget.response.signature=value;

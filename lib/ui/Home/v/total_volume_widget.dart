@@ -19,14 +19,13 @@ class TotalVolumeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // double volumeApplied = double.tryParse(con.model!.project_total_volume.toString())??0;
     double volumeApplied =
     double.parse(con.projectResponse!.volume.toString());
-    double volumeLeft = con.model!.project_total_volume - volumeApplied;
+    double volumeLeft = con.projectResponse!.project_total_volume - volumeApplied;
     double value = volumeApplied * 100;
-    value = value / con.model!.project_total_volume;
-    double wastageApplied = volumeApplied * con.model!.was_per;
-    double wastageLeft = con.model!.project_total_wastage - wastageApplied;
+    value = value / con.projectResponse!.project_total_volume;
+    double wastageApplied = volumeApplied * con.projectResponse!.was_per;
+    double wastageLeft = con.projectResponse!.project_total_wastage - wastageApplied;
 
     return Wrap(
       children: [
@@ -64,7 +63,7 @@ class TotalVolumeWidget extends StatelessWidget {
                   children: [
                     HeaderTxtWidget('Actual total volume'.toUpperCase(),color: Colors.white,),
                     const SizedBox(height: 10,),
-                    PowerTxtWidget("${con.model!.project_total_volume+con.model!.project_total_wastage}m",color: ThemeColor.colorbtnPrimary,fontSize: 20,),
+                    PowerTxtWidget("${con.projectResponse!.project_total_volume+con.projectResponse!.project_total_wastage}m",color: ThemeColor.colorbtnPrimary,fontSize: 20,),
                     const SizedBox(height: 80,),
                     Stack(
                       children: [

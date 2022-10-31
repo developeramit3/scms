@@ -30,8 +30,9 @@ this.marginHorizontal});
           backgroundBlendMode: BlendMode.screen,
         ):null,
         decoration: BoxDecoration(
+            color: Colors.grey.shade100,
           border: Border.all(color: color?? ThemeColor.colorPrimary,),
-            borderRadius:  BorderRadius.all(Radius.circular(radius??5))
+            borderRadius:  BorderRadius.all(Radius.circular(radius??20))
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

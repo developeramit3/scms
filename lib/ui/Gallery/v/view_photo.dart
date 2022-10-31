@@ -8,7 +8,7 @@ import '../m/gallery_response.dart';
 class ViewPhotos extends StatefulWidget {
   final String heroTitle;
   final imageIndex;
-  final List<GalleryResponse>? imageList;
+  final List<Gallery>? imageList;
   ViewPhotos({this.imageIndex, this.imageList, this.heroTitle = "img"});
 
   @override

@@ -3,7 +3,7 @@ import 'dart:convert';
 class TaskDetailsModel {
   List<DetailsModel> qa_qc_package;
   SurfaceModel surface_preparation_package;
-  SoftcutApplicationModel shotcrete_application_package;
+    SoftcutApplicationModel shotcrete_application_package;
   MonitoringModel applied_monitoring_package;
   EquipmentCleaningModel completion_equipment_cleaning_package;
   ChemicalAddedModel chemical_added;
@@ -153,7 +153,7 @@ class SurfaceModel {
 
 class SoftcutApplicationModel {
   String equipment;
-  String name_id_nozzleman;
+  dynamic name_id_nozzleman;
   dynamic ambient_temperature;
   dynamic methods_used;
   dynamic location_sprayed;
@@ -185,12 +185,12 @@ class SoftcutApplicationModel {
         position = json["position"] ?? "0",
         Thickness = json["Thickness"] ?? "",
         time_completion = json["time_completion"] ?? "",
-        volume = json["volume"] ?? "",
+        volume = json["volume"] ?? "0",
         start_time = json["start_time"] ?? "",
         finish_requirements = json["finish_requirements"] ?? "0",
         primary = json["primary"] ?? "0",
         ibc = json["ibc"] ?? "",
-        dump_volume = json["dump_volume"] ?? "",
+        dump_volume = json["dump_volume"] ?? "0",
         euipment_performance_postion =json["euipment_performance_postion"] ?? "0",
         euipment_performance_push_key =json["euipment_performance_push_key"] ?? "0",
         euipment_performance_date = json["euipment_performance_date"] ?? "",

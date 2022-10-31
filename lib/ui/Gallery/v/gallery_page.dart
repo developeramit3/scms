@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,7 +9,6 @@ import 'package:scms/Utils/theme_color.dart';
 import 'package:scms/ui/Gallery/v/view_photo.dart';
 import 'package:scms/widgets/chip_widget.dart';
 import 'package:scms/widgets/header_txt_widget.dart';
-import 'package:scms/widgets/sub_txt_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../widgets/picker_dailog_widget.dart';
 import '../c/gallery_controller.dart';
@@ -39,26 +37,10 @@ class _PageState extends StateMVC<GalleryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _con!.scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Gallery',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ), 
       persistentFooterButtons:[
-        if(_con!.user!=null&&_con!.user!.user_type=="0")
+        if(_con!.user!=null&&_con!.user!.user_type=="1")
          Center(
-           child: ChipWidget('Upload',width: 100,onTap: () async {
+           child: ChipWidget('Upload',width: 150,onTap: () async {
              showDialog(
                  context: context,
                  builder: (ctxt) => PickerDailogWidget(listener: (t) async {

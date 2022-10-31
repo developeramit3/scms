@@ -38,10 +38,10 @@ dependencies:
   shared_preferences: ^2.0.12
   mvc_pattern: ^8.10.2
   shimmer: ^2.0.0
-  firebase_auth: ^3.6.3
-  firebase_core: ^1.20.1
-  firebase_database: ^9.1.1
-  firebase_storage: ^10.3.6
+#  firebase_auth: ^3.6.3
+#  firebase_core: ^1.20.1
+#  firebase_database: ^9.1.1
+#  firebase_storage: ^10.3.6
   pie_chart: ^5.3.2
   syncfusion_flutter_charts: ^20.2.44
   http: ^0.13.4
@@ -57,6 +57,11 @@ dependencies:
   signature: ^5.2.1
   syncfusion_flutter_pdf: ^20.2.45
   bitmap: ^0.1.2
+  dio: ^4.0.0
+  equatable: ^2.0.3
+  pretty_dio_logger: ^1.1.1
+  file_saver: ^0.1.1
+  permission_handler: ^10.1.0
 
 flutter_localizations:
   sdk: flutter

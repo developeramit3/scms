@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../services/session_repo.dart';
 
 class SplashPage extends StatefulWidget {

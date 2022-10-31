@@ -27,7 +27,7 @@ class _PageState extends StateMVC<EquipmentDetails> {
   @override
   void initState() {
     super.initState();
-    _con!.getEquipment();
+
   }
 
   @override
@@ -35,25 +35,10 @@ class _PageState extends StateMVC<EquipmentDetails> {
     return Scaffold(
       key: _con!.scaffoldKey,
       backgroundColor: Theme.of(context).backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Equipment Performance',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 20,),
           _files(),
           Expanded(child: _barChart(),flex: 1,),
           Container(padding: EdgeInsets.symmetric(vertical: 10,horizontal: 10),
@@ -89,7 +74,7 @@ class _PageState extends StateMVC<EquipmentDetails> {
   }
 
   Widget _files() {
-    if (_con!.isLoading) {
+    if (_con!.equipmentResponse==null) {
       return Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade500,
@@ -111,17 +96,18 @@ class _PageState extends StateMVC<EquipmentDetails> {
               ],
             )),
       );
-    } else {
+    }
+    else {
       return Expanded(
           flex: 1,
           child: ListView.builder(
         itemBuilder: (context, index) {
-          EquipmentResponse response=_con!.list[index];
+          Equipment response=_con!.equipmentResponse!.list[index];
           return Padding(padding: const EdgeInsets.symmetric(horizontal: 20),child: ButtonPrimaryWidget(response.name,onTap: (){
             Navigator.pushNamed(context, '/equipment_single_details',arguments: response);
           },),);
         },
-        itemCount: _con!.list.length,shrinkWrap: true,
+        itemCount: _con!.equipmentResponse!.list.length,shrinkWrap: true,
       ),);
     }
   }

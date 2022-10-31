@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:scms/ui/Home/v/dashboard_page.dart';
 import 'package:scms/ui/Home/v/home_page.dart';
 import 'package:scms/ui/Login/v/login_page.dart';
+import 'package:scms/ui/Login/v/register_page.dart';
 import 'package:scms/ui/PersonnelPerformance/m/performance_response.dart';
-import '../ui/Equipment/c/equipment_controller.dart';
 import '../ui/Equipment/m/equipment_response.dart';
 import '../ui/Equipment/v/add_schedule_page.dart';
 import '../ui/Equipment/v/equipment_details.dart';
@@ -34,22 +35,24 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => SplashPage());
       case '/login':
         return MaterialPageRoute(builder: (_) => LoginPage());
+     case '/register':
+        return MaterialPageRoute(builder: (_) => RegisterPage());
     case '/project_list':
         return MaterialPageRoute(builder: (_) => ProjectListPage());
     case '/home':
-        return MaterialPageRoute(builder: (_) => HomePage(args as Map));
+        return MaterialPageRoute(builder: (_) => DashboardPage());
     case '/task':
-        return MaterialPageRoute(builder: (_) => TaskPage(args as String));
+        return MaterialPageRoute(builder: (_) => TaskPage());
     case '/task_details':
-        return MaterialPageRoute(builder: (_) => UpdateTaskDetailsPage(args as TaskResponse));
-    case '/personnel_performance':
+        return MaterialPageRoute(builder: (_) => UpdateTaskDetailsPage(args as TaskList));
+   /* case '/personnel_performance':
         return MaterialPageRoute(builder: (_) => PersonnelPerformancePage());
-    case '/add_personnel_performance':
+   */ case '/add_personnel_performance':
         return MaterialPageRoute(builder: (_) => AddUpdatePersonnelPerformancePage());
     case '/update_personnel_performance':
-        return MaterialPageRoute(builder: (_) => AddUpdatePersonnelPerformancePage(response: args as PerformanceResponse,));
+        return MaterialPageRoute(builder: (_) => AddUpdatePersonnelPerformancePage(response: args as Performance,));
     case '/details_personnel_performance':
-        return MaterialPageRoute(builder: (_) => PerformanceDetailsPage(args as PerformanceResponse,));
+        return MaterialPageRoute(builder: (_) => PerformanceDetailsPage(args as Performance,));
     case '/stock':
         return MaterialPageRoute(builder: (_) => StockManagementPage());
     case '/add_stock':
@@ -64,14 +67,14 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => GalleryPage());
     case '/video':
         return MaterialPageRoute(builder: (_) => VideoApp(args as String));
-    case '/equipment':
+   /* case '/equipment':
         return MaterialPageRoute(builder: (_) => EquipmentPage());
-    case '/equipment_list':
+   */ case '/equipment_list':
         return MaterialPageRoute(builder: (_) => EquipmentListPage());
     case '/equipment_details':
         return MaterialPageRoute(builder: (_) => EquipmentDetails());
     case '/equipment_single_details':
-        return MaterialPageRoute(builder: (_) => EquipmentSingleDetails(args as EquipmentResponse));
+        return MaterialPageRoute(builder: (_) => EquipmentSingleDetails(args as Equipment));
     case '/add_shedule_maintance':
         return MaterialPageRoute(builder: (_) => AddSchedulePage());
     }

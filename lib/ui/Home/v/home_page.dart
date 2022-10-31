@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:scms/Utils/theme_color.dart';
 import 'package:scms/services/session_repo.dart';
@@ -7,6 +9,7 @@ import 'package:scms/ui/Home/m/delay_response.dart';
 import 'package:scms/ui/Home/v/dum_value_dailog_widget.dart';
 import 'package:scms/ui/Home/v/total_volume_widget.dart';
 import 'package:scms/ui/Home/v/vol_day_dailog_widget.dart';
+import 'package:scms/ui/Task/v/task_page.dart';
 import 'package:scms/widgets/header_txt_widget.dart';
 import 'package:scms/widgets/sub_txt_widget.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -17,14 +20,18 @@ import '../../../widgets/confirm_dailog_widget.dart';
 import '../../../widgets/power_txt_widget.dart';
 import '../c/home_controller.dart';
 import 'package:shimmer/shimmer.dart';
+typedef callback=Function(
+    Widget child,
+    String tilte,
+    );
 
 class HomePage extends StatefulWidget {
-  Map map;
-
   @override
   _PageState createState() => _PageState();
+  callback onTap;
 
-  HomePage(this.map);
+  HomePage(this.onTap);
+
 }
 
 class _PageState extends StateMVC<HomePage> {
@@ -42,10 +49,9 @@ class _PageState extends StateMVC<HomePage> {
   @override
   void initState() {
     super.initState();
-    _con!.selectedProject = widget.map['project'];
-    _con!.getProjectDetails();
     _con!.getDelay();
     _con!.getDumvalue();
+    _con!.getProjectDetails();
   }
 
   @override
@@ -53,34 +59,6 @@ class _PageState extends StateMVC<HomePage> {
     return Scaffold(
       key: _con!.scaffoldKey,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-        actions: [
-          InkWell(
-            child: Padding(
-              child: Image.asset(
-                'assets/img/app_menu.png',
-                width: 20,
-              ),
-              padding: EdgeInsets.only(right: 20, left: 10),
-            ),
-            onTap: () => _con!.scaffoldKey.currentState!.openEndDrawer(),
-          ),
-        ],
-      ),
-      endDrawer: Drawer(
-        width: MediaQuery.of(context).size.width,
-        backgroundColor: Theme.of(context).backgroundColor,
-        child: Drawerer(),
-      ),
       body: Stack(
         children: [
           Container(
@@ -108,7 +86,7 @@ class _PageState extends StateMVC<HomePage> {
                       height: 10,
                     ),
                     HeaderTxtWidget(
-                      widget.map['project_real_name'],
+                      _con!.projectResponse==null?"":_con!.projectResponse!.project_real_name,
                       color: Colors.white,
                       fontSize: 25,
                     ),
@@ -122,7 +100,7 @@ class _PageState extends StateMVC<HomePage> {
                           child: Center(
                             child: PowerTxtWidget(
                                 _con!.projectResponse != null
-                                    ? "Total Volume\n ${widget.map['project_total_volume']}m"
+                                    ? "Total Volume\n ${_con!.projectResponse==null?"":_con!.projectResponse!.project_total_volume}m"
                                     : "Total Volume\n 0m",
                                 color: Colors.white,fontSize: 16,),
                           ),
@@ -186,7 +164,7 @@ class _PageState extends StateMVC<HomePage> {
                 'TASK FORMS',
                 fontSize: 12,
                 onTap: () {
-                  Navigator.pushNamed(context, '/task', arguments: _con!.selectedProject);
+                  widget.onTap.call(TaskPage(),"Task");
                 },
               ),
             ),
@@ -212,6 +190,7 @@ class _PageState extends StateMVC<HomePage> {
                           content: VolDayDailogWidget(
                               _con!.projectResponse!.volume_complete_day,
                             listener: (val) {
+                              _con!.projectResponse!.volume_complete_day=val;
                               _con!.postValDay(val);
                             },
                           ));
@@ -228,8 +207,17 @@ class _PageState extends StateMVC<HomePage> {
                   'RESET',
                   fontSize: 12,
                   onTap: () {
-                    if (_con!.user!.user_type == "0") {
-                      _con!.reset();
+                    if (_con!.user!.user_type == "1") {
+
+                      showDialog(
+                          context: context,
+                          builder: (ctxt) => ConfirmDailogWidget(
+                            title: "Reset",
+                            sub_title: "Are you sure want to reset?",
+                            listener: () {
+                              _con!.reset();
+                            },
+                          ));
                     } else {
                       Tools.ShowErrorMessage(
                           context, 'You does not allow for reset');
@@ -244,7 +232,7 @@ class _PageState extends StateMVC<HomePage> {
   }
 
   Widget _paiChart() {
-    if (_con!.isLoading) {
+    if (_con!.projectResponse==null) {
       return Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade500,
@@ -318,7 +306,7 @@ class _PageState extends StateMVC<HomePage> {
     if (volumeAppliedPerDay == 0) volumeAppliedPerDay = 1;
     double volumeApplied =
         double.parse(_con!.projectResponse!.volume.toString());
-    double volumeLeft = widget.map['project_total_volume'] - volumeApplied;
+    double volumeLeft = _con!.projectResponse!.project_total_volume - volumeApplied;
     double volumeAppliedPercent = volumeLeft / volumeAppliedPerDay;
     double day_Left = volumeAppliedPercent - dayRunnings;
     double day_complete = volumeAppliedPercent - day_Left;
@@ -402,9 +390,9 @@ class _PageState extends StateMVC<HomePage> {
   Widget _chartVolume() {
     double volumeApplied =
         double.parse(_con!.projectResponse!.volume.toString());
-    double volumeLeft = widget.map['project_total_volume'] - volumeApplied;
+    double volumeLeft = _con!.projectResponse!.project_total_volume - volumeApplied;
     double value = volumeApplied * 100;
-    value = value / widget.map['project_total_volume'];
+    value = value / _con!.projectResponse!.project_total_volume;
 
     return Column(
       children: [
@@ -506,10 +494,10 @@ class _PageState extends StateMVC<HomePage> {
   Widget _chartWastage() {
     double volumeApplied =
         double.parse(_con!.projectResponse!.volume.toString());
-    double wastageApplied = volumeApplied * widget.map['was_per'];
-    double wastageLeft = widget.map['project_total_wastage'] - wastageApplied;
+    double wastageApplied = volumeApplied * _con!.projectResponse!.was_per;
+    double wastageLeft = _con!.projectResponse!.project_total_wastage- wastageApplied;
     double value = wastageApplied * 100;
-    value = value / widget.map['project_total_wastage'];
+    value = value / _con!.projectResponse!.project_total_wastage;
 
     return Column(
       children: [
@@ -609,7 +597,7 @@ class _PageState extends StateMVC<HomePage> {
   }
 
   Widget _barChart() {
-    if (_con!.isLoadingDelay) {
+    if (_con!.delayResponse==null) {
       return Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade500,
@@ -658,215 +646,15 @@ class _PageState extends StateMVC<HomePage> {
             enablePanning: true,
           ),
           tooltipBehavior: TooltipBehavior(enable: true),
-          series: <ChartSeries<DelayResponse, String>>[
-            ColumnSeries<DelayResponse, String>(
-                dataSource: _con!.delayList,
-                xValueMapper: (DelayResponse sales, _) => sales.delay_date,
-                yValueMapper: (DelayResponse sales, _) => sales.delay,
+          series: <ChartSeries<Delay, String>>[
+            ColumnSeries<Delay, String>(
+                dataSource: _con!.delayResponse!.list,
+                xValueMapper: (Delay sales, _) => Tools.changeDateFormat(sales.delay_date),
+                yValueMapper: (Delay sales, _) => int.tryParse(sales.delay)??0,
                 color: ThemeColor.colorbtnPrimary,
                 dataLabelSettings: DataLabelSettings(isVisible: true))
           ]);
     }
   }
 
-  Widget Drawerer() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 50,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.home_outlined,
-              color: Colors.white,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Home',
-              color: Colors.white,
-              fontSize: 16,
-            ),
-            onTap: () => Navigator.pop(context),
-          ),
-          Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Image.asset(
-              "assets/img/proj_ico.png",
-              height: 25,
-              width: 30,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Projects',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-          ),
-          Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Image.asset(
-              "assets/img/person_ico.png",
-              height: 25,
-              width: 30,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Personnel Performance',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/personnel_performance',
-                  arguments: _con!.selectedProject);
-            },
-          ),
-          const Divider(height: 1,),
-          ListTile(
-            leading: Image.asset("assets/img/eq_ico2.png",height: 25,width: 30,),
-            contentPadding: EdgeInsets.symmetric(vertical: 1,horizontal: 10),
-            title: SubTxtWidget('Equipment Performance',color: Colors.white,fontSize: 18,),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/equipment');
-            },
-          ),
-          const Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Image.asset(
-              "assets/img/mat_ico.png",
-              height: 25,
-              width: 30,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Stock Management',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/stock');
-            },
-          ),
-          const Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.bug_report,
-              color: Colors.white,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Testing',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              // Navigator.pushNamed(context, '/training');
-            },
-          ),
-          const Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.school,
-              color: Colors.white,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Training',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/training');
-            },
-          ),
-          const Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.checklist,
-              color: Colors.white,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Trials',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/trials');
-            },
-          ),
-          const Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.image_outlined,
-              color: Colors.white,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Gallery',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/gallery');
-            },
-          ),
-          const Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.exit_to_app,
-              color: Colors.white,
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
-            title: SubTxtWidget(
-              'Logout',
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              showDialog(
-                  context: context,
-                  builder: (ctxt) => ConfirmDailogWidget(
-                        title: S.of(context).logout,
-                        sub_title: S.of(context).areYouSureYou,
-                        listener: () {
-                          Logout();
-                          Navigator.pushNamedAndRemoveUntil(
-                              context, '/login', (route) => false);
-                        },
-                      ));
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }

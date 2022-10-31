@@ -32,26 +32,10 @@ class _PageState extends StateMVC<TraningPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _con!.scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Training',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ), 
       persistentFooterButtons:[
-        if(_con!.user!=null&&_con!.user!.user_type=="0")
+        if(_con!.user!=null&&_con!.user!.user_type=="1")
          Center(
-           child: ChipWidget('ADD FILE',width: 100,onTap: () async {
+           child: ChipWidget('ADD FILE',width: 150,onTap: () async {
             await FilePicker.platform.pickFiles(
                type: FileType.custom,
                allowedExtensions: ['ppt', 'pdf', 'doc'],
@@ -175,7 +159,7 @@ class _PageState extends StateMVC<TraningPage> {
                         ),
                         if(_con!.user!.user_type=="0")
                         IconButton(onPressed: () {
-                          _con!.deleteTraining(_con!.list[index].key);
+                          _con!.deleteTraining(_con!.list[index].id,type);
                         }, icon: Icon(Icons.delete)),
                       ],
                     ),

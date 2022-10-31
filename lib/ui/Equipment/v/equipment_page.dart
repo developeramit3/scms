@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
+import 'package:scms/ui/Equipment/v/equipment_details.dart';
+import 'package:scms/ui/Equipment/v/equipment_list_page.dart';
 import 'package:scms/widgets/header_txt_widget.dart';
-import '../c/equipment_controller.dart';
+typedef callback=Function(
+    Widget child,
+    String tilte,
+    );
 
 class EquipmentPage extends StatefulWidget {
   @override
   _PageState createState() => _PageState();
+  callback onTap;
+
+  EquipmentPage(this.onTap);
 
 }
 
 class _PageState extends StateMVC<EquipmentPage> {
-  EquipmentController? _con;
-  _PageState() : super(EquipmentController()) {
-    _con = controller as EquipmentController?;
-  }
 
   @override
   void initState() {
@@ -23,23 +27,6 @@ class _PageState extends StateMVC<EquipmentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _con!.scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).backgroundColor,
-        elevation: 0,
-        title: HeaderTxtWidget(
-          'Equipment Performance',
-          color: Colors.white,
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          child: Padding(
-            child: Image.asset('assets/img/ic_backward_arrow.png'),
-            padding: EdgeInsets.all(15),
-          ),
-          onTap: () => Navigator.pop(context),
-        ),
-      ),
       body: Column(
         children: [
           const SizedBox(height: 20,),
@@ -47,14 +34,16 @@ class _PageState extends StateMVC<EquipmentPage> {
             title: HeaderTxtWidget('Add Equipment Performance'),
             trailing: Icon(Icons.arrow_forward_ios,color: Colors.grey.shade500,size: 25,),
             onTap: (){
-              Navigator.pushNamed(context, '/equipment_list');
+              widget.onTap.call(EquipmentListPage(),"Equipment Performance");
+              // Navigator.pushNamed(context, '/equipment_list');
             },
           ),
           ListTile(
             title: HeaderTxtWidget('Equipment Performance'),
             trailing: Icon(Icons.arrow_forward_ios,color: Colors.grey.shade500,size: 25,),
             onTap: (){
-              Navigator.pushNamed(context, '/equipment_details');
+              widget.onTap.call(EquipmentDetails(),"Equipment Performance");
+              // Navigator.pushNamed(context, '/equipment_details');
             },
           ),
         ],
